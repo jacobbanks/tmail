@@ -1,3 +1,4 @@
 credentials.json
 auth/creds.json
+/bin/
 token.json
