@@ -5,12 +5,22 @@ import (
 	// "log"
 
 	"github.com/jacobbanks/tmail/auth"
+	"github.com/jacobbanks/tmail/email"
 	// "github.com/rivo/tview"
 )
 
 func main() {
 	fmt.Println("Starting authentication process...")
-	auth.PromptForAuthentication()
+	authenticated := auth.PromptForAuthentication()
+	if !authenticated {
+		fmt.Errorf("Auth Failed")
+	}
+
+
+	email.FetchEmails()
+	// email.GetEmailsFromGmail()
+
+
 
 	// Example: Get the user's Gmail profile
 

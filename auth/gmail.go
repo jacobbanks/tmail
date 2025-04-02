@@ -2,188 +2,79 @@ package auth
 
 import (
 	"bufio"
-	"bytes"
+	// "bytes"
 	// "context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	// "io"
+	// "net/http"
 	"os"
-	"strings"
-	"time"
-
+	// "strings"
+	// "time"
+	// "bytes"
+	"encoding/gob"
 	"golang.org/x/oauth2"
 )
-
+// bmxr plzg fpgc cjgm
 // Google OAuth2 Endpoints for Device Flow
-const (
-	deviceAuthURL  = "https://oauth2.googleapis.com/device/code"
-	tokenURL       = "https://oauth2.googleapis.com/token"
-	clientID       = "563445405127-d81itr1efp6dg7agrn2de8d3rim3s6m3.apps.googleusercontent.com" // Replace with your actual client ID
-	clientSecret   = "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"
-)
 
-// DeviceAuthResponse represents the response from Google's device authorization request
-type DeviceAuthResponse struct {
-	DeviceCode      string `json:"device_code"`
-	UserCode        string `json:"user_code"`
-	VerificationURL string `json:"verification_url"`
-	Interval        int    `json:"interval"`
-	ExpiresIn       int    `json:"expires_in"`
-}
 
-// TokenResponse represents the OAuth2 token response
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
+type User struct {
+	AppPassword string
+	Email string
+	Name string
 }
 
 // Ask the user if they want to authenticate with Google
-func PromptForAuthentication() {
-	fmt.Print("Would you like to authenticate with Google? (Y/N): ")
+func PromptForAuthentication() bool {
+	fmt.Print("Hi! Welcome to tmail, what's your name?")
 
+	var userInfo User
 	// Read user input
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(strings.ToLower(input)) // Normalize input
+	userInfo.Name = input
 
-	// If user says yes, start authentication flow
-	if input == "y" || input == "yes" {
-		fmt.Println("Starting Google authentication...")
-		token, err := Authenticate()
-		if err != nil {
-			fmt.Println("Authentication failed:", err)
-			return
-		}
-
-		fmt.Println("Successfully authenticated! Access Token:", token)
+	if userInfo.Name == input {
+		fmt.Printf("Thanks %v!, Next, what is your email address? ", userInfo.Name)
 	} else {
-		fmt.Println("Skipping authentication.")
+		fmt.Print("I am sorry. I didn't get that.")
 	}
+
+	input, _ = reader.ReadString('\n')
+	userInfo.Email = input
+
+	if userInfo.Email == input {
+		fmt.Printf("Got it: %v, Next, what is your gmail app password? If you haven't configured one yet, then please see the ReadMe for instructions on how to setup an app password for gmail.", userInfo.Email)
+	}
+
+	input, _ = reader.ReadString('\n')
+	userInfo.AppPassword = input
+	if input == userInfo.AppPassword {
+		fmt.Printf("Thanks! Here is your data. %v", userInfo)
+	}
+	writeUserToFile(userInfo)
+	return true
+	 // Normalize input
+	//
+	// // If user says yes, start authentication flow
+	// if input == "y" || input == "yes" {
+	// 	fmt.Println("Starting Google authentication...")
+	// 	token, err := Authenticate()
+	// 	if err != nil {
+	// 		fmt.Println("Authentication failed:", err)
+	// 		return false
+	// 	}
+	//
+	// 	fmt.Println("Successfully authenticated! Access Token:", token)
+	// 	return true
+	// } else {
+	// 	fmt.Println("Skipping authentication.")
+	// 	return false
+	// }
 }
 
-// Authenticate performs the Google OAuth2 Device Authorization Flow
-func Authenticate() (string, error) {
-	// Step 1: Request a Device Code
-	deviceResp, err := requestDeviceCode()
-	if err != nil {
-		return "", err
-	}
 
-	// Step 2: Display Code to User
-	fmt.Println("Go to this URL and enter the code to authenticate:")
-	fmt.Println(deviceResp.VerificationURL)
-	fmt.Println("User Code:", deviceResp.UserCode)
-
-	// Step 3: Poll for Authorization
-	token, err := pollForToken(deviceResp)
-	if err != nil {
-		return "", err
-	}
-
-	// Step 4: Save token
-	saveToken(token)
-	fmt.Println("Authentication successful!")
-	return "", nil
-}
-
-// requestDeviceCode makes a request to Google's device authorization endpoint
-func requestDeviceCode() (*DeviceAuthResponse, error) {
-	requestBody := map[string]string{
-		"client_id": clientID,
-		"scope":     "openid email",
-	}
-	jsonBody, _ := json.Marshal(requestBody)
-
-	resp, err := http.Post(deviceAuthURL, "application/json", bytes.NewBuffer(jsonBody))
-	
-	if err != nil {
-		return nil, fmt.Errorf("failed to request device code: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	var deviceResp DeviceAuthResponse
-	if err := json.Unmarshal(body, &deviceResp); err != nil {
-		return nil, fmt.Errorf("failed to parse device response: %v", err)
-	}
-	return &deviceResp, nil
-}
-
-// pollForToken continuously checks if the user has completed authentication
-func pollForToken(deviceResp *DeviceAuthResponse) (*oauth2.Token, error) {
-	expirationTime := time.Now().Add(time.Duration(deviceResp.ExpiresIn) * time.Second)
-	ticker := time.NewTicker(time.Duration(deviceResp.Interval) * time.Second)
-	defer ticker.Stop()
-
-	for {
-		// Check if time has expired
-		if time.Now().After(expirationTime) {
-			return nil, fmt.Errorf("authentication timed out: user did not complete login in time")
-		}
-
-		// Request the token
-		tokenResp, err := requestToken(deviceResp.DeviceCode)
-		if err == nil {
-			return tokenResp, nil // Successfully got a token!
-		}
-
-
-		// Handle common OAuth errors
-		if err.Error() == "authorization_pending" {
-			// Normal case, keep waiting
-			fmt.Println("Waiting for user to authenticate...")
-		} else if err.Error() == "expired_token" {
-			return nil, fmt.Errorf("device code expired, please restart authentication")
-		} else if err.Error() == "slow_down" {
-			// Google is asking us to slow down requests
-			ticker.Reset(10 * time.Second) // Increase interval
-			fmt.Println("Google requested slower polling, adjusting...")
-		} else {
-			// Some other error
-			fmt.Errorf("authentication error: %v", err.Error())
-		}
-
-		// Wait for the next polling interval
-		<-ticker.C
-	}
-}
-
-// requestToken exchanges a device code for an OAuth2 token
-func requestToken(deviceCode string) (*oauth2.Token, error) {
-	requestBody := map[string]string{
-		"client_id":     clientID,
-		"client_secret": clientSecret,
-		"device_code":   deviceCode,
-		"grant_type":    "urn:ietf:params:oauth:grant-type:device_code",
-	}
-	jsonBody, _ := json.Marshal(requestBody)
-
-	resp, err := http.Post(tokenURL, "application/json", bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return nil, fmt.Errorf("failed to request token: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("token request failed: %s", body)
-	}
-
-	var tokenResp TokenResponse
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return nil, fmt.Errorf("failed to parse token response: %v", err)
-	}
-
-	return &oauth2.Token{
-		AccessToken:  tokenResp.AccessToken,
-		RefreshToken: tokenResp.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second),
-		TokenType:    tokenResp.TokenType,
-	}, nil
-}
 
 // saveToken stores the OAuth token in a local file
 func saveToken(token *oauth2.Token) {
@@ -193,6 +84,20 @@ func saveToken(token *oauth2.Token) {
 		return
 	}
 	defer file.Close()
+	print("This is your token here %v", token)
 
 	json.NewEncoder(file).Encode(token)
 }
+
+func writeUserToFile(userinfo User) {
+	file, err := os.Create("bnin/user.bin")
+	if err != nil {
+		fmt.Println("Unable to create file", err)
+		return
+	}
+	err = gob.NewEncoder(file).Encode(userinfo)
+	if err != nil {
+		fmt.Errorf("failed to encode data, %v", err)
+	}
+}
+

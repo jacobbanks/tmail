@@ -1,21 +1,27 @@
-package main
+package email
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
-	"github.com/emersion/go-imap/client"
+	"os"
+
 	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+	"github.com/jacobbanks/tmail/auth"
 )
 
 
-func getEmails() ([]imap.Message, error) {
+func getEmails(userInfo auth.User) ([]imap.Message, error) {
+	// load the token recieved from gmail servers
+
 	c, err := client.DialTLS("imap.gmail.com:993", nil) 
 	if err != nil {
 		return nil, err
 	}
 	defer c.Logout()
 
-	err = c.Login("jacobjeffreybanks@gmail.com", "bmxr plzg fpgc cjgm")
+	err = c.Login(userInfo.Email, userInfo.AppPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +53,22 @@ func getEmails() ([]imap.Message, error) {
 	return emails, nil
 } 
 
-func main() {
-	messages, err := getEmails()
+func getUserInfo() (auth.User) {
+	file, err := os.Open("bin/user.bin")
+	if err != nil {
+		fmt.Print("Cannot open file")
+	}
+
+	dec := gob.NewDecoder(file)
+	var user auth.User
+	dec.Decode(&user)
+	return user
+}
+
+
+func FetchEmails() {
+	userInfo := getUserInfo()
+	messages, err := getEmails(userInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
