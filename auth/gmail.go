@@ -2,102 +2,70 @@ package auth
 
 import (
 	"bufio"
-	// "bytes"
-	// "context"
-	"encoding/json"
 	"fmt"
-	// "io"
-	// "net/http"
 	"os"
-	// "strings"
-	// "time"
-	// "bytes"
-	"encoding/gob"
-	"golang.org/x/oauth2"
+	"strings"
 )
-// bmxr plzg fpgc cjgm
-// Google OAuth2 Endpoints for Device Flow
 
+// For backwards compatibility, maintain the User type as an alias of Credentials
+type User = Credentials
 
-type User struct {
-	AppPassword string
-	Email string
-	Name string
-}
-
-// Ask the user if they want to authenticate with Google
-func PromptForAuthentication() bool {
-	fmt.Print("Hi! Welcome to tmail, what's your name?")
-
-	var userInfo User
-	// Read user input
+// PromptForAuthentication prompts the user for their credentials
+func PromptForAuthentication() (Credentials, error) {
+	var creds Credentials
 	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	userInfo.Name = input
 
-	if userInfo.Name == input {
-		fmt.Printf("Thanks %v!, Next, what is your email address? ", userInfo.Name)
-	} else {
-		fmt.Print("I am sorry. I didn't get that.")
+	// Get name
+	fmt.Print("Hi! Welcome to tmail, what's your name? ")
+	name, err := reader.ReadString('\n')
+	if err != nil {
+		return Credentials{}, fmt.Errorf("failed to read name: %v", err)
+	}
+	creds.Name = strings.TrimSpace(name)
+
+	// Get email
+	fmt.Printf("Thanks %s! What is your email address? ", creds.Name)
+	email, err := reader.ReadString('\n')
+	if err != nil {
+		return Credentials{}, fmt.Errorf("failed to read email: %v", err)
+	}
+	creds.Email = strings.TrimSpace(email)
+
+	// Get app password
+	fmt.Print("What is your Gmail app password? If you haven't set one up, please see the README for instructions. ")
+	password, err := reader.ReadString('\n')
+	if err != nil {
+		return Credentials{}, fmt.Errorf("failed to read password: %v", err)
+	}
+	creds.AppPassword = strings.TrimSpace(password)
+
+	// Confirm the information
+	fmt.Printf("\nName: %s\nEmail: %s\nPassword: (hidden)\n", creds.Name, creds.Email)
+	fmt.Print("Is this information correct? (y/n): ")
+	confirm, err := reader.ReadString('\n')
+	if err != nil {
+		return Credentials{}, fmt.Errorf("failed to read confirmation: %v", err)
 	}
 
-	input, _ = reader.ReadString('\n')
-	userInfo.Email = input
-
-	if userInfo.Email == input {
-		fmt.Printf("Got it: %v, Next, what is your gmail app password? If you haven't configured one yet, then please see the ReadMe for instructions on how to setup an app password for gmail.", userInfo.Email)
+	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(confirm)), "y") {
+		return Credentials{}, fmt.Errorf("user canceled setup")
 	}
 
-	input, _ = reader.ReadString('\n')
-	userInfo.AppPassword = input
-	if input == userInfo.AppPassword {
-		fmt.Printf("Thanks! Here is your data. %v", userInfo)
+	// Save credentials
+	if err := SaveCredentials(creds); err != nil {
+		return Credentials{}, fmt.Errorf("failed to save credentials: %v", err)
 	}
-	writeUserToFile(userInfo)
-	return true
-	 // Normalize input
-	//
-	// // If user says yes, start authentication flow
-	// if input == "y" || input == "yes" {
-	// 	fmt.Println("Starting Google authentication...")
-	// 	token, err := Authenticate()
-	// 	if err != nil {
-	// 		fmt.Println("Authentication failed:", err)
-	// 		return false
-	// 	}
-	//
-	// 	fmt.Println("Successfully authenticated! Access Token:", token)
-	// 	return true
-	// } else {
-	// 	fmt.Println("Skipping authentication.")
-	// 	return false
-	// }
+
+	fmt.Println("Authentication setup complete!")
+	return creds, nil
 }
 
-
-
-// saveToken stores the OAuth token in a local file
-func saveToken(token *oauth2.Token) {
-	file, err := os.Create("token.json")
-	if err != nil {
-		fmt.Println("Unable to save token:", err)
-		return
-	}
-	defer file.Close()
-	print("This is your token here %v", token)
-
-	json.NewEncoder(file).Encode(token)
+// SaveUser is maintained for backwards compatibility
+func SaveUser(userInfo User) error {
+	return SaveCredentials(userInfo)
 }
 
-func writeUserToFile(userinfo User) {
-	file, err := os.Create("bnin/user.bin")
-	if err != nil {
-		fmt.Println("Unable to create file", err)
-		return
-	}
-	err = gob.NewEncoder(file).Encode(userinfo)
-	if err != nil {
-		fmt.Errorf("failed to encode data, %v", err)
-	}
+// LoadUser is maintained for backwards compatibility
+func LoadUser() (User, error) {
+	return LoadCredentials()
 }
-
