@@ -2,3 +2,6 @@ credentials.json
 auth/creds.json
 /bin/
 token.json
+claude.md
+.DS_Store
+*.log
