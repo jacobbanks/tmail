@@ -53,7 +53,6 @@ func (email *Email) Parse(msg *imap.Message) error {
 	mr := mail.NewReader(entity)
 	err = createEmail(mr, email)
 	if err != nil {
-		log.Printf("")
 		return err
 	}
 
@@ -117,23 +116,21 @@ func createEmailFromEnvelope(email *Email, envelope *imap.Envelope) error {
 func extractHeaders(header mail.Header, email *Email) error {
 	from, err := header.AddressList("From")
 	if err != nil {
-		log.Printf("Error extracting From header: %v", err)
+		// Continue with empty From field
 	}
 
 	to, err := header.AddressList("To")
 	if err != nil {
-		log.Printf("Error extracting To header: %v", err)
+		// Continue with empty To field
 	}
 
 	subject, err := header.Subject()
 	if err != nil {
-		log.Printf("Error extracting Subject header: %v", err)
 		subject = "(No subject)"
 	}
 
 	date, err := header.Date()
 	if err != nil {
-		log.Printf("Error extracting Date header: %v", err)
 		date = time.Now() // Fallback to current time
 	}
 
@@ -157,7 +154,6 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 		}
 
 		if err != nil {
-			log.Printf("Error reading message part: %v", err)
 			continue
 		}
 
@@ -169,7 +165,6 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 			if ct, _, err := header.ContentType(); err == nil {
 				contentType = ct
 			} else {
-				log.Printf("Error getting content type, using default: %v", err)
 				continue
 			}
 
@@ -185,7 +180,6 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 			// This is an attachment
 			filename, err := header.Filename()
 			if err != nil {
-				log.Printf("Error getting attachment filename: %v", err)
 				filename = "unknown-attachment"
 			}
 			attachments = append(attachments, filename)
@@ -203,9 +197,7 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 		// Convert HTML to plain text for display
 		if htmlText != "" {
 			plainTextFromHTML, err := html2text.FromString(htmlText)
-			if err != nil {
-				log.Printf("Error converting HTML to text: %v", err)
-			} else {
+			if err == nil {
 				email.Body = plainTextFromHTML
 				email.IsHTML = true
 			}
@@ -229,13 +221,11 @@ func readContent(reader io.Reader) string {
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(lReader)
 	if err != nil {
-		log.Printf("Error reading content: %v", err)
 		return "(Error reading content)"
 	}
 
 	// Check if we reached the limit
 	if buf.Len() >= maxReadSize {
-		log.Printf("Warning: Message content exceeded max size limit of %d bytes", maxReadSize)
 		return buf.String() + "\n\n[... Message truncated due to size ...]"
 	}
 

@@ -222,28 +222,24 @@ func (r *EmailReader) setupKeybindings() {
 				return nil
 			case 'j':
 				if r.currentView == "list" {
-					// Move down in list
 					current := r.emailList.GetCurrentItem()
 					if current < r.emailList.GetItemCount()-1 {
 						r.emailList.SetCurrentItem(current + 1)
 					}
 					return nil
 				} else if r.currentView == "content" {
-					// Scroll down in content view
 					row, col := r.contentView.GetScrollOffset()
 					r.contentView.ScrollTo(row+1, col)
 					return nil
 				}
 			case 'k':
 				if r.currentView == "list" {
-					// Move up in list
 					current := r.emailList.GetCurrentItem()
 					if current > 0 {
 						r.emailList.SetCurrentItem(current - 1)
 					}
 					return nil
 				} else if r.currentView == "content" {
-					// Scroll up in content view
 					row, col := r.contentView.GetScrollOffset()
 					if row > 0 {
 						r.contentView.ScrollTo(row-1, col)
@@ -252,7 +248,6 @@ func (r *EmailReader) setupKeybindings() {
 				}
 			case 'r':
 				if r.currentView == "content" {
-					// Reply to email
 					index := r.emailList.GetCurrentItem()
 					if index >= 0 && index < len(r.emails) {
 						r.replyToEmail(index)

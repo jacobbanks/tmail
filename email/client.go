@@ -83,7 +83,6 @@ func GetUserInfo() (auth.User, error) {
 	return auth.LoadUser()
 }
 
-// Internal version used by package functions
 func getUserInfo() auth.User {
 	user, err := auth.LoadUser()
 	if err != nil {

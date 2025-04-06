@@ -45,19 +45,16 @@ func getCredentialsPath() (string, error) {
 
 // SaveCredentials stores user credentials to the config file
 func SaveCredentials(creds Credentials) error {
-	// Get path to credentials file
 	path, err := getCredentialsPath()
 	if err != nil {
 		return err
 	}
 
-	// Marshal credentials to JSON
 	data, err := json.MarshalIndent(creds, "", "  ")
 	if err != nil {
 		return fmt.Errorf("unable to marshal credentials: %v", err)
 	}
 
-	// Write to file with secure permissions (read/write for owner only)
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		return fmt.Errorf("unable to write credentials file: %v", err)
 	}
@@ -67,7 +64,6 @@ func SaveCredentials(creds Credentials) error {
 
 // LoadCredentials reads user credentials from the config file
 func LoadCredentials() (Credentials, error) {
-	// Get path to credentials file
 	path, err := getCredentialsPath()
 	if err != nil {
 		return Credentials{}, err

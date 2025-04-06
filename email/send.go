@@ -111,7 +111,6 @@ func SendEmail(message *EmailMessage) error {
 	return e.Send(config.GetSMTPAddress(), auth)
 }
 
-// Used for Testing
 func QuickSend(to, subject, body string) error {
 	message, err := NewEmailMessage()
 	if err != nil {

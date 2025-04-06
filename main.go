@@ -6,6 +6,5 @@ import (
 )
 
 func main() {
-	// Execute the root command which will handle subcommands
 	cmd.Execute()
 }

@@ -7,15 +7,12 @@ import (
 	"github.com/emersion/go-imap"
 )
 
-// Test FormatImapAddress
 func TestFormatImapAddress(t *testing.T) {
-	// Test with nil address
 	addr := formatImapAddress(nil)
 	if addr != "" {
 		t.Errorf("Expected empty string for nil address, got %q", addr)
 	}
 	
-	// Test with no personal name
 	imapAddr := &imap.Address{
 		MailboxName: "test",
 		HostName:    "example.com",
@@ -26,7 +23,6 @@ func TestFormatImapAddress(t *testing.T) {
 		t.Errorf("Expected %q, got %q", expected, addr)
 	}
 	
-	// Test with personal name
 	imapAddr = &imap.Address{
 		PersonalName: "Test User",
 		MailboxName:  "test",
@@ -39,16 +35,13 @@ func TestFormatImapAddress(t *testing.T) {
 	}
 }
 
-// Test FormatImapAddressList
 func TestFormatImapAddressList(t *testing.T) {
-	// Test with empty list
 	addrs := []*imap.Address{}
 	result := formatImapAddressList(addrs)
 	if result != "" {
 		t.Errorf("Expected empty string for empty list, got %q", result)
 	}
 	
-	// Test with one address
 	addrs = []*imap.Address{
 		{PersonalName: "Test User", MailboxName: "test", HostName: "example.com"},
 	}

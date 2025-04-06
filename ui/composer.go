@@ -106,7 +106,6 @@ func (c *EmailComposer) createLayout(replyTo *email.Email) {
 	c.form.AddInputField("Bcc: (separate multiple addresses with commas)", "", 50, nil, nil)
 	c.form.AddInputField("Subject:", "", 50, nil, nil)
 	
-	// Display for attachments (read-only)
 	attachText := "None"
 	if len(c.attachments) > 0 {
 		var fileNames []string
@@ -359,7 +358,6 @@ func (c *EmailComposer) sendEmail() {
 		}
 	}
 
-	// Debug output
 	if c.debugMode {
 		fmt.Println("Debug: Sending email")
 		fmt.Printf("To: %v\n", message.To)
