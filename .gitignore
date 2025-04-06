@@ -49,3 +49,5 @@ debug_output.log
 # Notes and temporary files
 TODO.md
 NOTES.md
+
+.gitignore
