@@ -12,7 +12,7 @@ func TestFormatImapAddress(t *testing.T) {
 	if addr != "" {
 		t.Errorf("Expected empty string for nil address, got %q", addr)
 	}
-	
+
 	imapAddr := &imap.Address{
 		MailboxName: "test",
 		HostName:    "example.com",
@@ -22,7 +22,7 @@ func TestFormatImapAddress(t *testing.T) {
 	if addr != expected {
 		t.Errorf("Expected %q, got %q", expected, addr)
 	}
-	
+
 	imapAddr = &imap.Address{
 		PersonalName: "Test User",
 		MailboxName:  "test",
@@ -41,7 +41,7 @@ func TestFormatImapAddressList(t *testing.T) {
 	if result != "" {
 		t.Errorf("Expected empty string for empty list, got %q", result)
 	}
-	
+
 	addrs = []*imap.Address{
 		{PersonalName: "Test User", MailboxName: "test", HostName: "example.com"},
 	}
@@ -50,7 +50,7 @@ func TestFormatImapAddressList(t *testing.T) {
 	if result != expected {
 		t.Errorf("Expected %q, got %q", expected, result)
 	}
-	
+
 	// Test with multiple addresses
 	addrs = []*imap.Address{
 		{PersonalName: "User One", MailboxName: "one", HostName: "example.com"},

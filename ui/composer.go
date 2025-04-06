@@ -14,15 +14,15 @@ import (
 
 // EmailComposer implements a basic TUI for composing emails
 type EmailComposer struct {
-	app          *tview.Application
-	form         *tview.Form
-	bodyArea     *tview.TextArea
-	statusBar    *tview.TextView
-	layout       *tview.Flex
-	pages        *tview.Pages
-	attachments  []string
-	debugMode    bool
-	sending      bool
+	app         *tview.Application
+	form        *tview.Form
+	bodyArea    *tview.TextArea
+	statusBar   *tview.TextView
+	layout      *tview.Flex
+	pages       *tview.Pages
+	attachments []string
+	debugMode   bool
+	sending     bool
 }
 
 const TO_FIELD = 0
@@ -105,7 +105,7 @@ func (c *EmailComposer) createLayout(replyTo *email.Email) {
 	c.form.AddInputField("Cc: (separate multiple addresses with commas)", "", 50, nil, nil)
 	c.form.AddInputField("Bcc: (separate multiple addresses with commas)", "", 50, nil, nil)
 	c.form.AddInputField("Subject:", "", 50, nil, nil)
-	
+
 	attachText := "None"
 	if len(c.attachments) > 0 {
 		var fileNames []string

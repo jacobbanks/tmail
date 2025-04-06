@@ -196,7 +196,12 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 	if plainText == "" || (htmlText != "" && userConfig.ShowHTML) {
 		// Convert HTML to plain text for display
 		if htmlText != "" {
-			plainTextFromHTML, err := html2text.FromString(htmlText)
+			// Configure HTML to text options for better link formatting
+			options := &html2text.Options{
+				PrettyTables: true,
+				LinkStyle:    html2text.LinkStyleInline, // Show links as "text (url)" instead of "text [url]"
+			}
+			plainTextFromHTML, err := html2text.FromStringWithOptions(htmlText, options)
 			if err == nil {
 				email.Body = plainTextFromHTML
 				email.IsHTML = true

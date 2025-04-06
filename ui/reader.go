@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -296,13 +297,19 @@ func (r *EmailReader) showEmail(index int) {
 	content.WriteString("\n[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
 
 	// Add the email body (either HTML-converted or plain text)
+	emailText := ""
 	if r.showHTML && email.HTMLBody != "" {
-		// Use the HTML-converted text
-		content.WriteString(email.Body)
+		emailText = email.Body
 	} else {
-		// Use the plain text version or fall back to the converted version
-		content.WriteString(email.Body)
+		emailText = email.Body
 	}
+
+	// Highlight links for better readability
+	if r.showHTML && email.IsHTML {
+		emailText = highlightLinks(emailText)
+	}
+
+	content.WriteString(emailText)
 
 	// Set the content view text
 	r.contentView.SetText(content.String())
@@ -385,6 +392,17 @@ func (r *EmailReader) updateStatusBar() {
 		}
 		r.statusBar.SetText("[blue]j/k[white]: Scroll | " + htmlStatus + "[blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
 	}
+}
+
+// highlightLinks applies color formatting to URLs in text
+func highlightLinks(text string) string {
+	// Regular expression to match URLs in the text, including those in parentheses
+	urlRegex := regexp.MustCompile(`\((https?://[^\s)]+)\)`)
+
+	// Replace each URL with a colored version using tview's color tags
+	coloredText := urlRegex.ReplaceAllString(text, "([cyan]$1[white])")
+
+	return coloredText
 }
 
 // Run starts the email reader application
