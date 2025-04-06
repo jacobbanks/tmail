@@ -15,23 +15,23 @@ func TestNewEmailComposer(t *testing.T) {
 	if composer == nil {
 		t.Fatal("NewEmailComposer returned nil")
 	}
-	
+
 	// Check that the app was created
 	if composer.app == nil {
 		t.Error("Composer app was not initialized")
 	}
-	
+
 	// Verify debug mode is off by default
 	if composer.debugMode {
 		t.Error("Debug mode should be off by default")
 	}
-	
+
 	// Test setting debug mode
 	composer.SetDebugMode(true)
 	if !composer.debugMode {
 		t.Error("Debug mode was not set correctly")
 	}
-	
+
 	// Check that all required form fields are present
 	if composer.form == nil {
 		t.Error("Form was not initialized")
@@ -43,12 +43,12 @@ func TestNewEmailComposer(t *testing.T) {
 				fieldCount++
 			}
 		}
-		
+
 		if fieldCount != 4 {
 			t.Errorf("Expected 4 input fields, got %d", fieldCount)
 		}
 	}
-	
+
 	// Check that body area is initialized
 	if composer.bodyArea == nil {
 		t.Error("Body text area was not initialized")
@@ -74,18 +74,18 @@ func TestNewEmailReader(t *testing.T) {
 			Body:    "This is test email 2",
 		},
 	}
-	
+
 	// Create a reader
 	reader := NewEmailReader(emails)
 	if reader == nil {
 		t.Fatal("NewEmailReader returned nil")
 	}
-	
+
 	// Check that the app was created
 	if reader.app == nil {
 		t.Error("Reader app was not initialized")
 	}
-	
+
 	// Check that emails were stored
 	if len(reader.emails) != 2 {
 		t.Errorf("Expected 2 emails, got %d", len(reader.emails))

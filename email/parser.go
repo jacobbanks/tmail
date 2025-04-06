@@ -23,7 +23,6 @@ type Email struct {
 	Attachments []string
 }
 
-
 func (email *Email) Parse(msg *imap.Message) error {
 	if msg == nil {
 		return fmt.Errorf("cannot parse a nil message")
@@ -164,14 +163,14 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 		case *mail.InlineHeader:
 			// This is message content (either plain text or HTML)
 			contentType := "text/plain"
-			
+
 			if ct, _, err := header.ContentType(); err == nil {
 				contentType = ct
 			} else {
 				log.Printf("Error getting content type, using default: %v", err)
 				return err
 			}
-			
+
 			log.Printf("Processing email part with content type: %s", contentType)
 
 			content := readContent(part.Body)
@@ -207,29 +206,29 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 		return nil
 	}
 
-	email.Body, email.IsHTML, email.Attachments =  "(No content found)", false, attachments
+	email.Body, email.IsHTML, email.Attachments = "(No content found)", false, attachments
 	return nil
 }
 
 func readContent(reader io.Reader) string {
 	// Use a limit to avoid any issues with overly large messages
 	const maxReadSize = 10 * 1024 * 1024 // 10MB max
-	
+
 	lReader := io.LimitReader(reader, maxReadSize)
-	
+
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(lReader)
 	if err != nil {
 		log.Printf("Error reading content: %v", err)
 		return "(Error reading content)"
 	}
-	
+
 	// Check if we reached the limit
 	if buf.Len() >= maxReadSize {
 		log.Printf("Warning: Message content exceeded max size limit of %d bytes", maxReadSize)
 		return buf.String() + "\n\n[... Message truncated due to size ...]"
 	}
-	
+
 	return buf.String()
 }
 

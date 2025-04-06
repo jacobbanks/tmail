@@ -123,7 +123,7 @@ func runSimpleSend(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("Sending email...")
-	
+
 	// Send email
 	err = email.SendEmail(message)
 	if err != nil {

@@ -28,7 +28,7 @@ func TestReadContent(t *testing.T) {
 	// Test size limit with a reader that pretends to be infinite
 	limitTestReader := &limitTestReaderMock{}
 	result = readContent(limitTestReader)
-	
+
 	// Verify truncation message is present
 	if !bytes.Contains([]byte(result), []byte("[... Message truncated due to size ...]")) {
 		t.Errorf("readContent should indicate truncation in large messages")
@@ -78,7 +78,7 @@ func TestCreateEmailFromEnvelope(t *testing.T) {
 	// Create an email struct to populate
 	email := &Email{}
 	err := createEmailFromEnvelope(email, envelope)
-	
+
 	if err != nil {
 		t.Fatalf("createEmailFromEnvelope returned error: %v", err)
 	}
@@ -120,9 +120,9 @@ func (r *limitTestReaderMock) Read(p []byte) (n int, err error) {
 	for i := range p {
 		p[i] = 'A'
 	}
-	
+
 	r.readCount += len(p)
-	
+
 	// Never return EOF - pretend the file is infinite
 	// The readContent function's LimitReader will stop reading
 	return len(p), nil

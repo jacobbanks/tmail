@@ -21,6 +21,12 @@ type EmailComposer struct {
 	sending   bool
 }
 
+const TO_FIELD = 0
+const CC_FIELD = 1
+const BCC_FIELD = 2
+const SUBJECT_FIELD = 3
+const BODY_AREA = 4
+
 // NewEmailComposer creates a new email composer TUI
 func NewEmailComposer(replyTo *email.Email) *EmailComposer {
 	composer := &EmailComposer{
@@ -28,17 +34,17 @@ func NewEmailComposer(replyTo *email.Email) *EmailComposer {
 		debugMode: false,
 		sending:   false,
 	}
-	
+
 	// Create form and layout
 	composer.createLayout(replyTo)
-	
+
 	// Set up keyboard shortcuts
 	composer.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if composer.sending {
 			// Block all input while sending
 			return nil
 		}
-		
+
 		switch event.Key() {
 		case tcell.KeyCtrlS: // Ctrl+S to send
 			composer.sendEmail()
@@ -59,7 +65,7 @@ func NewEmailComposer(replyTo *email.Email) *EmailComposer {
 		}
 		return event
 	})
-	
+
 	return composer
 }
 
@@ -72,21 +78,21 @@ func (c *EmailComposer) createLayout(replyTo *email.Email) {
 	c.form.SetTitleAlign(tview.AlignCenter)
 	c.form.SetBorderColor(tcell.ColorSteelBlue)
 
-	// Create form fields
-	c.form.AddInputField("To:", "", 50, nil, nil)
-	c.form.AddInputField("Cc:", "", 50, nil, nil)
-	c.form.AddInputField("Bcc:", "", 50, nil, nil)
+	// Create form fields with help text for multiple addresses
+	c.form.AddInputField("To: (separate multiple addresses with commas)", "", 50, nil, nil)
+	c.form.AddInputField("Cc: (separate multiple addresses with commas)", "", 50, nil, nil)
+	c.form.AddInputField("Bcc: (separate multiple addresses with commas)", "", 50, nil, nil)
 	c.form.AddInputField("Subject:", "", 50, nil, nil)
 
 	// Create form buttons
 	c.form.AddButton("Send", func() {
 		c.sendEmail()
 	})
-	
+
 	c.form.AddButton("Cancel", func() {
 		c.app.Stop()
 	})
-	
+
 	// Create the body area
 	c.bodyArea = tview.NewTextArea()
 	c.bodyArea.SetBorder(true)
@@ -94,59 +100,59 @@ func (c *EmailComposer) createLayout(replyTo *email.Email) {
 	c.bodyArea.SetTitleAlign(tview.AlignCenter)
 	c.bodyArea.SetBorderColor(tcell.ColorSteelBlue)
 	c.bodyArea.SetPlaceholder("Type your message here...")
-	
+
 	// Create the status bar
 	c.statusBar = tview.NewTextView()
 	c.statusBar.SetDynamicColors(true)
 	c.statusBar.SetTextAlign(tview.AlignCenter)
 	c.statusBar.SetText("[blue]Tab[white]: Next Field | [blue]Ctrl+N[white]: Edit Body | [blue]Ctrl+S[white]: Send | [blue]Ctrl+Q[white]: Quit")
-	
+
 	// Create the layout
 	c.layout = tview.NewFlex().SetDirection(tview.FlexRow)
-	
+
 	// Create the header
 	header := tview.NewTextView().
 		SetText("Email Composer").
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(tcell.ColorSteelBlue)
-	
+
 	// Add items to the layout
 	c.layout.AddItem(header, 1, 0, false)
 	c.layout.AddItem(tview.NewBox(), 1, 0, false) // Spacing
-	
+
 	// Create content area (form + body)
 	content := tview.NewFlex().SetDirection(tview.FlexRow)
 	content.AddItem(c.form, 13, 0, true)
 	content.AddItem(c.bodyArea, 0, 1, false)
-	
+
 	// Create centered flex
 	centered := tview.NewFlex()
 	centered.AddItem(nil, 0, 1, false)
 	centered.AddItem(content, 0, 3, true)
 	centered.AddItem(nil, 0, 1, false)
-	
+
 	c.layout.AddItem(centered, 0, 1, true)
 	c.layout.AddItem(c.statusBar, 1, 0, false)
-	
+
 	// Pre-fill form if replying
 	if replyTo != nil {
 		// Set To field to original sender
 		c.form.GetFormItem(0).(*tview.InputField).SetText(replyTo.From)
-		
+
 		// Set Subject with Re: prefix if needed
 		subject := replyTo.Subject
 		if !strings.HasPrefix(strings.ToLower(subject), "re:") {
 			subject = "Re: " + subject
 		}
 		c.form.GetFormItem(3).(*tview.InputField).SetText(subject)
-		
+
 		// Add reply content to body
 		replyBody := "\n\n-------- Original Message --------\n"
 		replyBody += "From: " + replyTo.From + "\n"
 		replyBody += "Date: " + replyTo.Date.Format("Mon, 02 Jan 2006 15:04:05 -0700") + "\n"
 		replyBody += "Subject: " + replyTo.Subject + "\n\n"
 		replyBody += replyTo.Body
-		
+
 		c.bodyArea.SetText(replyBody, true)
 	}
 }
@@ -178,63 +184,65 @@ func (c *EmailComposer) sendEmail() {
 	if c.sending {
 		return
 	}
-	
+
 	// Update status and set sending flag
 	c.sending = true
-	c.updateStatus("Sending Email...")
-	
+
 	// Get field values
-	toField := c.form.GetFormItem(0).(*tview.InputField)
-	ccField := c.form.GetFormItem(1).(*tview.InputField)
-	bccField := c.form.GetFormItem(2).(*tview.InputField)
-	subjectField := c.form.GetFormItem(3).(*tview.InputField)
-	
+	toField := c.form.GetFormItem(TO_FIELD).(*tview.InputField)
+	ccField := c.form.GetFormItem(CC_FIELD).(*tview.InputField)
+	bccField := c.form.GetFormItem(BCC_FIELD).(*tview.InputField)
+	subjectField := c.form.GetFormItem(SUBJECT_FIELD).(*tview.InputField)
+
 	// Validate required fields
 	if toField.GetText() == "" {
 		c.showError("Error: Recipient (To) is required")
 		return
 	}
-	
+
 	if subjectField.GetText() == "" {
 		c.showError("Error: Subject is required")
 		return
 	}
-	
+
 	// Create and populate email message
 	message, err := email.NewEmailMessage()
 	if err != nil {
 		c.showError(fmt.Sprintf("Error creating message: %v", err))
 		return
 	}
-	
+
 	// Add recipients
-	for _, to := range strings.Split(toField.GetText(), ",") {
+	toAddresses := strings.Split(toField.GetText(), ",")
+	for _, to := range toAddresses {
 		to = strings.TrimSpace(to)
 		if to != "" {
 			message.AddRecipient(to)
 		}
 	}
-	
+
 	// Add CC recipients
-	for _, cc := range strings.Split(ccField.GetText(), ",") {
+	ccAddresses := strings.Split(ccField.GetText(), ",")
+	for _, cc := range ccAddresses {
 		cc = strings.TrimSpace(cc)
 		if cc != "" {
 			message.AddCC(cc)
 		}
 	}
-	
+
 	// Add BCC recipients
-	for _, bcc := range strings.Split(bccField.GetText(), ",") {
+	bccAddresses := strings.Split(bccField.GetText(), ",")
+	for _, bcc := range bccAddresses {
 		bcc = strings.TrimSpace(bcc)
 		if bcc != "" {
 			message.AddBCC(bcc)
 		}
 	}
-	
+
 	// Set subject and body
 	message.Subject = strings.TrimSpace(subjectField.GetText())
 	message.SetTextBody(c.bodyArea.GetText())
-	
+
 	// Debug output
 	if c.debugMode {
 		fmt.Println("Debug: Sending email")
@@ -244,29 +252,25 @@ func (c *EmailComposer) sendEmail() {
 		fmt.Printf("Subject: %s\n", message.Subject)
 		fmt.Printf("Body length: %d bytes\n", len(c.bodyArea.GetText()))
 	}
-	
+
 	// Create send status label
 	statusLabel := tview.NewTextView().
-		SetText("Sending email...").
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(tcell.ColorWhite).
 		SetBackgroundColor(tcell.ColorNavy)
-	
+
 	// Save original layout
 	origLayout := c.layout
-	
+
 	// Show sending status
 	c.app.SetRoot(statusLabel, true)
-	c.app.Draw()
-	
 	// Actually send the email
 	err = email.SendEmail(message)
-	
+
 	// Handle results
 	if err != nil {
 		// Show error and return to composer
 		c.app.SetRoot(origLayout, true)
-		c.app.Draw()
 		c.showError(fmt.Sprintf("Failed to send email: %v", err))
 	} else {
 		// Show success message
@@ -275,10 +279,9 @@ func (c *EmailComposer) sendEmail() {
 			SetTextAlign(tview.AlignCenter).
 			SetTextColor(tcell.ColorWhite).
 			SetBackgroundColor(tcell.ColorDarkGreen)
-		
+
 		c.app.SetRoot(successText, true)
-		c.app.Draw()
-		
+
 		// Wait briefly then exit
 		time.Sleep(1 * time.Second)
 		c.app.Stop()
@@ -293,10 +296,10 @@ func (c *EmailComposer) showError(message string) {
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(tcell.ColorWhite).
 		SetBackgroundColor(tcell.ColorDarkRed)
-	
+
 	// Show error
 	c.app.SetRoot(errorView, true)
-	
+
 	// Handle key press to dismiss
 	errorView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		c.app.SetRoot(c.layout, true)

@@ -42,7 +42,7 @@ func (r *EmailReader) setupUI() {
 	r.setupStatusBar()
 	r.setupMainLayout()
 	r.setupKeybindings()
-	
+
 	// Add "main" page to the pages component
 	r.pages.AddPage("main", r.mainLayout, true, true)
 }
@@ -54,7 +54,7 @@ func (r *EmailReader) setupEmailList() {
 	r.emailList.SetTitle(" Inbox ")
 	r.emailList.SetTitleAlign(tview.AlignCenter)
 	r.emailList.SetBorderColor(tcell.ColorSteelBlue)
-	
+
 	// Style the list
 	r.emailList.SetMainTextColor(tcell.ColorWhite)
 	r.emailList.SetSecondaryTextColor(tcell.ColorLightGray)
@@ -67,13 +67,13 @@ func (r *EmailReader) setupEmailList() {
 	for i, email := range r.emails {
 		// Format the date for display
 		date := email.Date.Format("2006-01-02 15:04")
-		
+
 		// Format the subject (truncate if too long)
 		subject := email.Subject
 		if len(subject) > 40 {
 			subject = subject[:37] + "..."
 		}
-		
+
 		// Format the sender (extract just the name or email address)
 		sender := email.From
 		if idx := strings.LastIndex(sender, "<"); idx > 0 {
@@ -82,11 +82,11 @@ func (r *EmailReader) setupEmailList() {
 		if len(sender) > 25 {
 			sender = sender[:22] + "..."
 		}
-		
+
 		// Create list item with formatted details
 		text := fmt.Sprintf("%s  %s", date, subject)
 		secondaryText := fmt.Sprintf("From: %s", sender)
-		
+
 		// Create a fixed value for the closure to capture
 		index := i
 		r.emailList.AddItem(text, secondaryText, rune('a'+i), func() {
@@ -102,7 +102,7 @@ func (r *EmailReader) setupContentView() {
 	r.contentView.SetTitle(" Email Content ")
 	r.contentView.SetTitleAlign(tview.AlignCenter)
 	r.contentView.SetBorderColor(tcell.ColorSteelBlue)
-	
+
 	r.contentView.SetDynamicColors(true)
 	r.contentView.SetRegions(true)
 	r.contentView.SetWordWrap(true)
@@ -121,18 +121,18 @@ func (r *EmailReader) setupStatusBar() {
 func (r *EmailReader) setupMainLayout() {
 	// Create the main layout
 	r.mainLayout = tview.NewFlex().SetDirection(tview.FlexRow)
-	
+
 	// Add a title/header
 	header := tview.NewTextView()
 	header.SetText("Email Reader")
 	header.SetTextAlign(tview.AlignCenter)
 	header.SetTextColor(tcell.ColorSteelBlue)
-	
+
 	// Create a flex for email list and content view
 	contentArea := tview.NewFlex()
 	contentArea.AddItem(r.emailList, 0, 1, true)
 	contentArea.AddItem(r.contentView, 0, 2, false)
-	
+
 	// Create a centered content layout
 	centeredFlex := tview.NewFlex().
 		AddItem(nil, 0, 1, false).
@@ -142,7 +142,7 @@ func (r *EmailReader) setupMainLayout() {
 			0, 3, true,
 		).
 		AddItem(nil, 0, 1, false)
-	
+
 	// Add components to the layout with proper spacing
 	r.mainLayout.AddItem(header, 1, 0, false)
 	r.mainLayout.AddItem(tview.NewBox(), 1, 0, false) // Spacing
@@ -220,32 +220,32 @@ func (r *EmailReader) showEmail(index int) {
 	if index < 0 || index >= len(r.emails) {
 		return
 	}
-	
+
 	email := r.emails[index]
-	
+
 	// Format the email for display
 	var content strings.Builder
-	
+
 	// Add header information with colors
 	content.WriteString(fmt.Sprintf("[yellow]From:[white] %s\n", email.From))
 	content.WriteString(fmt.Sprintf("[yellow]To:[white] %s\n", email.To))
 	content.WriteString(fmt.Sprintf("[yellow]Date:[white] %s\n", email.Date.Format(time.RFC1123Z)))
 	content.WriteString(fmt.Sprintf("[yellow]Subject:[white] %s\n\n", email.Subject))
-	
+
 	// Add a separator
 	content.WriteString("[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
-	
+
 	// Add the email body
 	content.WriteString(email.Body)
-	
+
 	// Set the content view text
 	r.contentView.SetText(content.String())
 	r.contentView.ScrollToBeginning()
-	
+
 	// Update the view state and focus
 	r.currentView = "content"
 	r.app.SetFocus(r.contentView)
-	
+
 	// Update the status bar
 	r.updateStatusBar()
 }
@@ -255,10 +255,10 @@ func (r *EmailReader) replyToEmail(index int) {
 	if index < 0 || index >= len(r.emails) {
 		return
 	}
-	
+
 	// Stop the current application
 	r.app.Stop()
-	
+
 	// Create and run a new email composer in reply mode
 	composer := NewEmailComposer(r.emails[index])
 	composer.Run()
@@ -278,14 +278,14 @@ func (r *EmailReader) showHelp() {
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			r.pages.SwitchToPage("main")
 		})
-	
+
 	// Style the modal
 	modal.SetBorderColor(tcell.ColorSteelBlue)
 	modal.SetBackgroundColor(tcell.ColorBlack)
 	modal.SetTextColor(tcell.ColorWhite)
 	modal.SetButtonBackgroundColor(tcell.ColorSteelBlue)
 	modal.SetButtonTextColor(tcell.ColorWhite)
-	
+
 	// Add the modal to pages and show it
 	r.pages.AddPage("modal", modal, true, true)
 	r.app.SetFocus(modal)
@@ -304,7 +304,7 @@ func (r *EmailReader) updateStatusBar() {
 func (r *EmailReader) Run() error {
 	// Initially focus on the email list
 	r.app.SetFocus(r.emailList)
-	
+
 	// Start the application
 	return r.app.SetRoot(r.pages, true).EnableMouse(true).Run()
 }

@@ -21,7 +21,7 @@ var readCmd = &cobra.Command{
 			fmt.Println("Please run: tmail auth")
 			os.Exit(1)
 		}
-		
+
 		emails := email.FetchEmails(10) // Fetch the last 10 emails
 
 		if len(emails) == 0 {

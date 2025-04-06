@@ -2,7 +2,6 @@ package email
 
 import (
 	"errors"
-	"log"
 	"net/smtp"
 	"strings"
 
@@ -88,15 +87,10 @@ func SendEmail(message *EmailMessage) error {
 	auth := smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
 
 	// Log sending info in debug mode
-	log.Printf("Sending email from: %s", message.From)
-	log.Printf("To: %v", e.To)
 	if len(e.Cc) > 0 {
-		log.Printf("Cc: %v", e.Cc)
 	}
 	if len(e.Bcc) > 0 {
-		log.Printf("Bcc: %v", e.Bcc)
 	}
-	log.Printf("Subject: %s", e.Subject)
 
 	return e.Send(config.GetSMTPAddress(), auth)
 }
