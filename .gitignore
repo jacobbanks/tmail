@@ -3,5 +3,6 @@ auth/creds.json
 /bin/
 token.json
 claude.md
-.DS_Store
+*.DS_Store
 *.log
+.gitignore
