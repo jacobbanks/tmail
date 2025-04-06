@@ -11,6 +11,7 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-message"
 	"github.com/emersion/go-message/mail"
+	"github.com/jaytaylor/html2text"
 )
 
 type Email struct {
@@ -19,6 +20,7 @@ type Email struct {
 	Subject     string
 	Date        time.Time
 	Body        string
+	HTMLBody    string
 	IsHTML      bool
 	Attachments []string
 }
@@ -168,10 +170,8 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 				contentType = ct
 			} else {
 				log.Printf("Error getting content type, using default: %v", err)
-				return err
+				continue
 			}
-
-			log.Printf("Processing email part with content type: %s", contentType)
 
 			content := readContent(part.Body)
 
@@ -187,26 +187,36 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 			if err != nil {
 				log.Printf("Error getting attachment filename: %v", err)
 				filename = "unknown-attachment"
-				return err
 			}
 			attachments = append(attachments, filename)
 		}
 	}
 
-	// Prefer plain text over HTML will come back and do HTML if I have time.
-	if plainText != "" {
-		email.Body, email.IsHTML, email.Attachments = plainText, false, attachments
-		log.Printf("plainText email %v", email)
-		return nil
-	}
-	if htmlText != "" {
-		log.Printf("html email %v, and email %v", htmlText, email)
-		// implement html later
-		email.Body, email.IsHTML, email.Attachments = plainText, true, attachments
-		return nil
+	// Store both plain text and HTML content
+	email.Body = plainText
+	email.HTMLBody = htmlText
+	email.Attachments = attachments
+
+	// If we have HTML content and plain text is empty or user prefers HTML
+	userConfig, _ := LoadUserConfig()
+	if plainText == "" || (htmlText != "" && userConfig.ShowHTML) {
+		// Convert HTML to plain text for display
+		if htmlText != "" {
+			plainTextFromHTML, err := html2text.FromString(htmlText)
+			if err != nil {
+				log.Printf("Error converting HTML to text: %v", err)
+			} else {
+				email.Body = plainTextFromHTML
+				email.IsHTML = true
+			}
+		}
 	}
 
-	email.Body, email.IsHTML, email.Attachments = "(No content found)", false, attachments
+	// If we still have no content
+	if email.Body == "" && email.HTMLBody == "" {
+		email.Body = "(No content found)"
+	}
+
 	return nil
 }
 

@@ -20,6 +20,7 @@ type EmailReader struct {
 	contentView *tview.TextView
 	statusBar   *tview.TextView
 	currentView string // "list" or "content"
+	showHTML    bool   // whether to show HTML content
 }
 
 // NewEmailReader creates a new email reader TUI
@@ -30,6 +31,10 @@ func NewEmailReader(emails []*email.Email) *EmailReader {
 		emails:      emails,
 		currentView: "list",
 	}
+
+	// Apply user configuration
+	config, _ := email.LoadUserConfig()
+	reader.showHTML = config.ShowHTML
 
 	reader.setupUI()
 	return reader
@@ -53,13 +58,28 @@ func (r *EmailReader) setupEmailList() {
 	r.emailList.SetBorder(true)
 	r.emailList.SetTitle(" Inbox ")
 	r.emailList.SetTitleAlign(tview.AlignCenter)
-	r.emailList.SetBorderColor(tcell.ColorSteelBlue)
+
+	// Apply theme
+	config, _ := email.LoadUserConfig()
+	var borderColor, selectedBgColor tcell.Color
+	switch config.Theme {
+	case "dark":
+		borderColor = tcell.ColorDarkBlue
+		selectedBgColor = tcell.ColorDarkBlue
+	case "light":
+		borderColor = tcell.ColorLightBlue
+		selectedBgColor = tcell.ColorLightBlue
+	default:
+		borderColor = tcell.ColorSteelBlue
+		selectedBgColor = tcell.ColorSteelBlue
+	}
+	r.emailList.SetBorderColor(borderColor)
 
 	// Style the list
 	r.emailList.SetMainTextColor(tcell.ColorWhite)
 	r.emailList.SetSecondaryTextColor(tcell.ColorLightGray)
 	r.emailList.SetSelectedTextColor(tcell.ColorBlack)
-	r.emailList.SetSelectedBackgroundColor(tcell.ColorSteelBlue)
+	r.emailList.SetSelectedBackgroundColor(selectedBgColor)
 	r.emailList.SetHighlightFullLine(true)
 	r.emailList.SetWrapAround(false)
 
@@ -83,8 +103,14 @@ func (r *EmailReader) setupEmailList() {
 			sender = sender[:22] + "..."
 		}
 
+		// Add attachment indicator if needed
+		attachmentIndicator := ""
+		if len(email.Attachments) > 0 {
+			attachmentIndicator = "📎 "
+		}
+
 		// Create list item with formatted details
-		text := fmt.Sprintf("%s  %s", date, subject)
+		text := fmt.Sprintf("%s  %s%s", date, attachmentIndicator, subject)
 		secondaryText := fmt.Sprintf("From: %s", sender)
 
 		// Create a fixed value for the closure to capture
@@ -101,7 +127,19 @@ func (r *EmailReader) setupContentView() {
 	r.contentView.SetBorder(true)
 	r.contentView.SetTitle(" Email Content ")
 	r.contentView.SetTitleAlign(tview.AlignCenter)
-	r.contentView.SetBorderColor(tcell.ColorSteelBlue)
+
+	// Apply theme
+	config, _ := email.LoadUserConfig()
+	var borderColor tcell.Color
+	switch config.Theme {
+	case "dark":
+		borderColor = tcell.ColorDarkBlue
+	case "light":
+		borderColor = tcell.ColorLightBlue
+	default:
+		borderColor = tcell.ColorSteelBlue
+	}
+	r.contentView.SetBorderColor(borderColor)
 
 	r.contentView.SetDynamicColors(true)
 	r.contentView.SetRegions(true)
@@ -114,7 +152,7 @@ func (r *EmailReader) setupStatusBar() {
 	r.statusBar = tview.NewTextView()
 	r.statusBar.SetDynamicColors(true)
 	r.statusBar.SetTextAlign(tview.AlignCenter)
-	r.statusBar.SetText("[blue]j/k[white]: Navigate | [blue]Enter[white]: View Email | [blue]q[white]: Quit")
+	r.statusBar.SetText("[blue]j/k[white]: Navigate | [blue]Enter[white]: View Email | [blue]r[white]: Reply | [blue]q[white]: Quit")
 }
 
 // setupMainLayout organizes the UI components into a layout
@@ -122,11 +160,23 @@ func (r *EmailReader) setupMainLayout() {
 	// Create the main layout
 	r.mainLayout = tview.NewFlex().SetDirection(tview.FlexRow)
 
+	// Get theme color
+	config, _ := email.LoadUserConfig()
+	var headerColor tcell.Color
+	switch config.Theme {
+	case "dark":
+		headerColor = tcell.ColorDarkBlue
+	case "light":
+		headerColor = tcell.ColorLightBlue
+	default:
+		headerColor = tcell.ColorSteelBlue
+	}
+
 	// Add a title/header
 	header := tview.NewTextView()
 	header.SetText("Email Reader")
 	header.SetTextAlign(tview.AlignCenter)
-	header.SetTextColor(tcell.ColorSteelBlue)
+	header.SetTextColor(headerColor)
 
 	// Create a flex for email list and content view
 	contentArea := tview.NewFlex()
@@ -209,6 +259,16 @@ func (r *EmailReader) setupKeybindings() {
 					}
 					return nil
 				}
+			case 'h':
+				// Toggle between HTML and plain text view
+				if r.currentView == "content" {
+					r.showHTML = !r.showHTML
+					index := r.emailList.GetCurrentItem()
+					if index >= 0 && index < len(r.emails) {
+						r.showEmail(index)
+					}
+					return nil
+				}
 			}
 		}
 		return event
@@ -230,13 +290,24 @@ func (r *EmailReader) showEmail(index int) {
 	content.WriteString(fmt.Sprintf("[yellow]From:[white] %s\n", email.From))
 	content.WriteString(fmt.Sprintf("[yellow]To:[white] %s\n", email.To))
 	content.WriteString(fmt.Sprintf("[yellow]Date:[white] %s\n", email.Date.Format(time.RFC1123Z)))
-	content.WriteString(fmt.Sprintf("[yellow]Subject:[white] %s\n\n", email.Subject))
+	content.WriteString(fmt.Sprintf("[yellow]Subject:[white] %s\n", email.Subject))
+
+	// Add attachment information if present
+	if len(email.Attachments) > 0 {
+		content.WriteString(fmt.Sprintf("[yellow]Attachments:[white] %s\n", strings.Join(email.Attachments, ", ")))
+	}
 
 	// Add a separator
-	content.WriteString("[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
+	content.WriteString("\n[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
 
-	// Add the email body
-	content.WriteString(email.Body)
+	// Add the email body (either HTML-converted or plain text)
+	if r.showHTML && email.HTMLBody != "" {
+		// Use the HTML-converted text
+		content.WriteString(email.Body)
+	} else {
+		// Use the plain text version or fall back to the converted version
+		content.WriteString(email.Body)
+	}
 
 	// Set the content view text
 	r.contentView.SetText(content.String())
@@ -272,6 +343,7 @@ func (r *EmailReader) showHelp() {
 			"Enter: View selected email\n" +
 			"Esc: Return to email list\n" +
 			"r: Reply to current email\n" +
+			"h: Toggle HTML/plain text view\n" +
 			"q: Quit\n" +
 			"?: Show this help").
 		AddButtons([]string{"OK"}).
@@ -279,11 +351,23 @@ func (r *EmailReader) showHelp() {
 			r.pages.SwitchToPage("main")
 		})
 
+	// Get theme color
+	config, _ := email.LoadUserConfig()
+	var borderColor tcell.Color
+	switch config.Theme {
+	case "dark":
+		borderColor = tcell.ColorDarkBlue
+	case "light":
+		borderColor = tcell.ColorLightBlue
+	default:
+		borderColor = tcell.ColorSteelBlue
+	}
+
 	// Style the modal
-	modal.SetBorderColor(tcell.ColorSteelBlue)
+	modal.SetBorderColor(borderColor)
 	modal.SetBackgroundColor(tcell.ColorBlack)
 	modal.SetTextColor(tcell.ColorWhite)
-	modal.SetButtonBackgroundColor(tcell.ColorSteelBlue)
+	modal.SetButtonBackgroundColor(borderColor)
 	modal.SetButtonTextColor(tcell.ColorWhite)
 
 	// Add the modal to pages and show it
@@ -296,7 +380,15 @@ func (r *EmailReader) updateStatusBar() {
 	if r.currentView == "list" {
 		r.statusBar.SetText("[blue]j/k[white]: Navigate | [blue]Enter[white]: View Email | [blue]q[white]: Quit")
 	} else {
-		r.statusBar.SetText("[blue]j/k[white]: Scroll | [blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
+		htmlStatus := ""
+		if r.emails[r.emailList.GetCurrentItem()].HTMLBody != "" {
+			if r.showHTML {
+				htmlStatus = "[blue]h[white]: Show Plain Text | "
+			} else {
+				htmlStatus = "[blue]h[white]: Show HTML | "
+			}
+		}
+		r.statusBar.SetText("[blue]j/k[white]: Scroll | " + htmlStatus + "[blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
 	}
 }
 

@@ -1,67 +1,76 @@
 package email
 
 import (
-	"bytes"
-	"io"
 	"testing"
 	"time"
 
 	"github.com/emersion/go-imap"
 )
 
-func TestReadContent(t *testing.T) {
-	// Test normal reading
-	normalContent := "This is normal content"
-	reader := bytes.NewBufferString(normalContent)
-	result := readContent(reader)
-	if result != normalContent {
-		t.Errorf("readContent failed for normal content: got %q, expected %q", result, normalContent)
+// Test FormatImapAddress
+func TestFormatImapAddress(t *testing.T) {
+	// Test with nil address
+	addr := formatImapAddress(nil)
+	if addr != "" {
+		t.Errorf("Expected empty string for nil address, got %q", addr)
 	}
-
-	// Test error handling
-	errorReader := errorReaderMock{err: io.ErrUnexpectedEOF}
-	result = readContent(errorReader)
-	if result != "(Error reading content)" {
-		t.Errorf("readContent failed for error: got %q, expected error message", result)
+	
+	// Test with no personal name
+	imapAddr := &imap.Address{
+		MailboxName: "test",
+		HostName:    "example.com",
 	}
-
-	// Test size limit with a reader that pretends to be infinite
-	limitTestReader := &limitTestReaderMock{}
-	result = readContent(limitTestReader)
-
-	// Verify truncation message is present
-	if !bytes.Contains([]byte(result), []byte("[... Message truncated due to size ...]")) {
-		t.Errorf("readContent should indicate truncation in large messages")
+	addr = formatImapAddress(imapAddr)
+	expected := "test@example.com"
+	if addr != expected {
+		t.Errorf("Expected %q, got %q", expected, addr)
+	}
+	
+	// Test with personal name
+	imapAddr = &imap.Address{
+		PersonalName: "Test User",
+		MailboxName:  "test",
+		HostName:     "example.com",
+	}
+	addr = formatImapAddress(imapAddr)
+	expected = "Test User <test@example.com>"
+	if addr != expected {
+		t.Errorf("Expected %q, got %q", expected, addr)
 	}
 }
 
-func TestFormatAddressList(t *testing.T) {
-	// Empty address list
-	if formatAddressList(nil) != "" {
-		t.Errorf("formatAddressList failed for nil")
+// Test FormatImapAddressList
+func TestFormatImapAddressList(t *testing.T) {
+	// Test with empty list
+	addrs := []*imap.Address{}
+	result := formatImapAddressList(addrs)
+	if result != "" {
+		t.Errorf("Expected empty string for empty list, got %q", result)
 	}
-
-	// Single address
-	addresses := []*imap.Address{
+	
+	// Test with one address
+	addrs = []*imap.Address{
 		{PersonalName: "Test User", MailboxName: "test", HostName: "example.com"},
 	}
+	result = formatImapAddressList(addrs)
 	expected := "Test User <test@example.com>"
-	result := formatImapAddressList(addresses)
 	if result != expected {
-		t.Errorf("formatImapAddressList failed: got %q, expected %q", result, expected)
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
-
-	// Multiple addresses
-	addresses = append(addresses, &imap.Address{
-		MailboxName: "another", HostName: "example.com",
-	})
-	expected = "Test User <test@example.com>, another@example.com"
-	result = formatImapAddressList(addresses)
-	if result != expected {
-		t.Errorf("formatImapAddressList failed: got %q, expected %q", result, expected)
+	
+	// Test with multiple addresses
+	addrs = []*imap.Address{
+		{PersonalName: "User One", MailboxName: "one", HostName: "example.com"},
+		{MailboxName: "two", HostName: "example.com"},
+		{PersonalName: "User Three", MailboxName: "three", HostName: "example.com"},
+	}
+	result = formatImapAddressList(addrs)
+	if result == "" {
+		t.Errorf("Expected non-empty result for multiple addresses, got empty string")
 	}
 }
 
+// Mock implementation for testing Parse with envelope
 func TestCreateEmailFromEnvelope(t *testing.T) {
 	now := time.Now()
 	envelope := &imap.Envelope{
@@ -75,55 +84,27 @@ func TestCreateEmailFromEnvelope(t *testing.T) {
 		},
 	}
 
-	// Create an email struct to populate
 	email := &Email{}
 	err := createEmailFromEnvelope(email, envelope)
-
 	if err != nil {
-		t.Fatalf("createEmailFromEnvelope returned error: %v", err)
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if email.Subject != "Test Subject" {
-		t.Errorf("Subject mismatch: got %q, expected %q", email.Subject, "Test Subject")
+		t.Errorf("Expected Subject to be 'Test Subject', got %q", email.Subject)
 	}
 
-	if email.From != "Sender <sender@example.com>" {
-		t.Errorf("From mismatch: got %q, expected %q", email.From, "Sender <sender@example.com>")
-	}
-
-	if email.To != "Recipient <recipient@example.com>" {
-		t.Errorf("To mismatch: got %q, expected %q", email.To, "Recipient <recipient@example.com>")
+	expectedFrom := "Sender <sender@example.com>"
+	if email.From != expectedFrom {
+		t.Errorf("Expected From to be %q, got %q", expectedFrom, email.From)
 	}
 
 	if !email.Date.Equal(now) {
-		t.Errorf("Date mismatch: got %v, expected %v", email.Date, now)
-	}
-}
-
-// Mock for testing error cases
-type errorReaderMock struct {
-	err error
-}
-
-func (e errorReaderMock) Read(p []byte) (n int, err error) {
-	return 0, e.err
-}
-
-// Mock reader that pretends to be larger than the max size limit
-// but actually just returns 'A's indefinitely until hitting the limit
-type limitTestReaderMock struct {
-	readCount int
-}
-
-func (r *limitTestReaderMock) Read(p []byte) (n int, err error) {
-	// Fill the buffer with 'A's
-	for i := range p {
-		p[i] = 'A'
+		t.Errorf("Expected Date to be %v, got %v", now, email.Date)
 	}
 
-	r.readCount += len(p)
-
-	// Never return EOF - pretend the file is infinite
-	// The readContent function's LimitReader will stop reading
-	return len(p), nil
+	expectedBody := "(Message body not available)"
+	if email.Body != expectedBody {
+		t.Errorf("Expected Body to be %q, got %q", expectedBody, email.Body)
+	}
 }

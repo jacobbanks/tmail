@@ -3,19 +3,22 @@ package email
 import (
 	"errors"
 	"net/smtp"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jordan-wright/email"
 )
 
 type EmailMessage struct {
-	From    string
-	To      []string
-	Cc      []string
-	Bcc     []string
-	Subject string
-	Body    string
-	IsHTML  bool
+	From        string
+	To          []string
+	Cc          []string
+	Bcc         []string
+	Subject     string
+	Body        string
+	IsHTML      bool
+	Attachments []string // Paths to attachment files
 }
 
 func NewEmailMessage() (*EmailMessage, error) {
@@ -25,10 +28,11 @@ func NewEmailMessage() (*EmailMessage, error) {
 	}
 
 	return &EmailMessage{
-		From: userInfo.Email,
-		To:   []string{},
-		Cc:   []string{},
-		Bcc:  []string{},
+		From:        userInfo.Email,
+		To:          []string{},
+		Cc:          []string{},
+		Bcc:         []string{},
+		Attachments: []string{},
 	}, nil
 }
 
@@ -52,6 +56,17 @@ func (e *EmailMessage) SetHTMLBody(htmlContent string) {
 func (e *EmailMessage) SetTextBody(textContent string) {
 	e.Body = textContent
 	e.IsHTML = false
+}
+
+// AddAttachment adds a file as an attachment
+func (e *EmailMessage) AddAttachment(filePath string) error {
+	// Check if file exists and is readable
+	_, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+	e.Attachments = append(e.Attachments, filePath)
+	return nil
 }
 
 func SendEmail(message *EmailMessage) error {
@@ -84,13 +99,14 @@ func SendEmail(message *EmailMessage) error {
 		e.Text = []byte(message.Body)
 	}
 
-	auth := smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
+	// Add attachments
+	for _, attachPath := range message.Attachments {
+		if _, err := e.AttachFile(attachPath); err != nil {
+			return err
+		}
+	}
 
-	// Log sending info in debug mode
-	if len(e.Cc) > 0 {
-	}
-	if len(e.Bcc) > 0 {
-	}
+	auth := smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
 
 	return e.Send(config.GetSMTPAddress(), auth)
 }
@@ -116,6 +132,13 @@ func validateEmailMessage(message *EmailMessage) error {
 
 	if len(message.To) == 0 && len(message.Cc) == 0 && len(message.Bcc) == 0 {
 		return errors.New("email must have at least one recipient")
+	}
+
+	// Validate attachments
+	for _, path := range message.Attachments {
+		if _, err := os.Stat(path); err != nil {
+			return errors.New("attachment not found: " + filepath.Base(path))
+		}
 	}
 
 	return nil

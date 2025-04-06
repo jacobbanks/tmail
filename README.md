@@ -4,11 +4,24 @@ A simple terminal-based email client for Gmail
 
 ## Features
 
-- Authenticate with Gmail using application password
-- Send emails with To, CC, and BCC fields
-- Read emails with a clean terminal interface
-- Reply to emails
-- TUI (Terminal User Interface) experience
+- **Authentication**: Connect to Gmail using application password
+- **Email Viewing**: 
+  - Read emails with a clean terminal interface
+  - Toggle between HTML and plaintext views
+  - View attachment information
+  - Reply to emails
+- **Email Composition**:
+  - Send emails with To, CC, and BCC fields
+  - Support for multiple recipients (comma-separated)
+  - Add file attachments
+- **User Configuration**:
+  - Choose from different color themes
+  - Configure number of emails to fetch
+  - Toggle HTML display
+- **TUI Interface**:
+  - Terminal User Interface with intuitive navigation
+  - Keyboard shortcuts for all operations
+  - Status bars with helpful information
 
 ## Installation
 
@@ -66,6 +79,44 @@ tmail send
 # Quick send
 tmail simple-send --to recipient@example.com --subject "Hello" --body "Hi there!"
 ```
+
+### Configuration
+
+```bash
+# Show current config
+tmail config show
+
+# Set theme (blue, dark, light)
+tmail config set theme dark
+
+# Set default number of emails to fetch
+tmail config set default_mails 100
+
+# Toggle HTML rendering
+tmail config set show_html true
+```
+
+## Keyboard Shortcuts
+
+### Email List
+- `j/k`: Navigate up/down
+- `Enter`: View selected email
+- `q`: Quit
+- `?`: Show help
+
+### Email Viewer
+- `j/k`: Scroll up/down
+- `Esc`: Return to email list
+- `r`: Reply to email
+- `h`: Toggle HTML/plaintext view
+- `q`: Quit
+
+### Email Composer
+- `Tab`: Navigate between fields
+- `Ctrl+N`: Focus body area
+- `Ctrl+A`: Add attachment
+- `Ctrl+S`: Send email
+- `Ctrl+Q/C`: Quit
 
 ## Development
 
