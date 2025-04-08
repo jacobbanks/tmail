@@ -60,12 +60,6 @@ func (e *OutgoingMessage) AddBCC(email string) {
 	e.Bcc = append(e.Bcc, email)
 }
 
-// SetHTMLBody sets the message body as HTML content and marks the message accordingly.
-func (e *OutgoingMessage) SetHTMLBody(htmlContent string) {
-	e.Body = htmlContent
-	e.IsHTML = true
-}
-
 // SetTextBody sets the message body as plain text content and marks the message accordingly.
 func (e *OutgoingMessage) SetTextBody(textContent string) {
 	e.Body = textContent
@@ -93,6 +87,9 @@ func sanitizeAddresses(addresses []string) []string {
 	}
 	return clean
 }
+
+
+// TODO: Determine if I need this later.
 
 // SendEmail is a helper function that creates a mail provider
 // and sends an email message
