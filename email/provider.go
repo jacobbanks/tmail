@@ -38,7 +38,7 @@ func CreateDefaultMailProvider() (MailProvider, error) {
 		}
 		provider, err = NewGmailProvider(DefaultConfig, userInfo)
 		if err != nil {
-			log.Fatal("Cannot get Default Mail Provider")
+			log.Println("Cannot get Default Mail Provider")
 			initErr = err
 		}
 		initErr = nil
