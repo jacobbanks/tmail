@@ -1,6 +1,6 @@
 # TMail
 
-A terminal-based email client for Gmail with a clean, efficient interface.
+A terminal-based email client for Gmail.
 
 ## Features
 - **Gmail Integration**
