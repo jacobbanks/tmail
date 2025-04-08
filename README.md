@@ -125,8 +125,8 @@ make release         # Build release binaries
 ### Release Process
 
 1. Update version in `version.go`
-2. Create a tag: `git tag -a v0.1.0 -m "Version 0.1.0"`
-3. Push the tag: `git push origin v0.1.0`
+2. Create a tag: `git tag -a vx.x.x -m "Version x.x.x"`
+3. Push the tag: `git push origin vx.x.x`
 4. GitHub Actions will automatically build and create a release
 
 ### License
