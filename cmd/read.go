@@ -20,8 +20,8 @@ var readCmd = &cobra.Command{
 			fmt.Println("Please run: tmail auth")
 			os.Exit(1)
 		}
-		limit := 10 // Default to 10 emails
-		emails, err := provider.GetEmails(limit)
+
+		emails, err := provider.GetEmails(25)
 		if err != nil {
 			fmt.Println("Error fetching emails:", err)
 			os.Exit(1)

@@ -1,150 +1,134 @@
 # TMail
 
-A simple terminal-based email client for Gmail
+A terminal-based email client for Gmail with a clean, efficient interface.
 
 ## Features
+- **Gmail Integration**
+  - Connect securely with application password
+  - Read emails with a clean, navigable interface
+  - Send emails with attachments
+  - Reply to conversations
 
-- **Authentication**: Connect to Gmail using application password
-- **Email Viewing**: 
-  - Read emails with a clean terminal interface
-  - Toggle between HTML and plaintext views
-  - View attachment information
-  - Reply to emails
-- **Email Composition**:
-  - Send emails with To, CC, and BCC fields
-  - Support for multiple recipients (comma-separated)
-  - Add file attachments
-- **User Configuration**:
-  - Choose from different color themes
-  - Configure number of emails to fetch
-  - Toggle HTML display
-- **TUI Interface**:
-  - Terminal User Interface with intuitive navigation
-  - Keyboard shortcuts for all operations
-  - Status bars with helpful information
+- **Terminal UI**
+  - Intuitive keyboard-driven navigation
+  - Email list with sender, subject, and date
+  - Message view with formatted content
+  - Composer with multiple recipient support
 
 ## Installation
 
-### From Source
+### Quick Install
+
+```bash
+# Using Go (requires Go 1.16+)
+go install github.com/jacobbanks/tmail@latest
+
+# Using the Makefile (after cloning the repo)
+make install        # Install to $GOPATH/bin
+make install-global # Install to /usr/local/bin (requires sudo)
+```
+
+### Download Binaries
+
+Pre-built binaries are available on the [Releases page](https://github.com/jacobbanks/tmail/releases).
+
+### Build from Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/jacobbanks/tmail.git
 cd tmail
 
-# Build and install
-go build -o tmail main.go
-go install
-```
+# Build
+make build
 
-### With Go
-
-```bash
-go install github.com/jacobbanks/tmail@latest
-```
-
-### Homebrew
-
-```bash
-# Coming soon
-brew tap jacobbanks/tap
-brew install tmail
+# Run tests
+make test
 ```
 
 ## Usage
 
-### First-time setup
+### First-time Setup
+
+Before using tmail, you need to set up authentication with Gmail:
 
 ```bash
-# Set up authentication with Gmail
 tmail auth
 ```
 
-You'll need to provide your Gmail address and an App Password (not your regular Gmail password).
-[Learn how to create an App Password](https://support.google.com/accounts/answer/185833)
+You'll be prompted to enter:
+1. Your Gmail address
+2. An App Password (not your regular Gmail password)
 
-### Reading emails
+> 🔑 **Security Note**: tmail stores credentials locally on your machine. For Gmail, you must create an [App Password](https://support.google.com/accounts/answer/185833).
+
+### Reading Emails
 
 ```bash
-# Read recent emails
+# Read most recent emails
 tmail read
 ```
 
-### Sending emails
+### Sending Emails
 
 ```bash
-# Open compose window
+# Open the email composer
 tmail send
 
-# Quick send
-tmail simple-send --to recipient@example.com --subject "Hello" --body "Hi there!"
+# Quick send from command line
+tmail simple-send --to user@example.com --subject "Hello" --body "This is a test email"
+
+# Include attachments
+tmail simple-send --to user@example.com --subject "With attachment" --body "See attached file" --attach path/to/file.pdf
 ```
 
-### Configuration
+### Version Information
 
 ```bash
-# Show current config
-tmail config show
-
-# Set theme (blue, dark, light)
-tmail config set theme dark
-
-# Set default number of emails to fetch
-tmail config set default_mails 100
-
-# Toggle HTML rendering
-tmail config set show_html true
+tmail version
 ```
 
 ## Keyboard Shortcuts
 
-### Email List
-- `j/k`: Navigate up/down
-- `Enter`: View selected email
+### Email List View
+- `j/k`: Navigate down/up
+- `Enter`: Open selected email
 - `q`: Quit
-- `?`: Show help
 
-### Email Viewer
-- `j/k`: Scroll up/down
-- `Esc`: Return to email list
+### Email Content View
+- `j/k`: Scroll down/up
+- `Esc`: Return to list view
 - `r`: Reply to email
-- `h`: Toggle HTML/plaintext view
 - `q`: Quit
 
 ### Email Composer
 - `Tab`: Navigate between fields
-- `Ctrl+N`: Focus body area
+- `Ctrl+N`: Focus body content
 - `Ctrl+A`: Add attachment
 - `Ctrl+S`: Send email
-- `Ctrl+Q/C`: Quit
+- `Ctrl+Q/C`: Quit without sending
 
-## Development
-
-The project uses standard Go tools and practices:
+### Makefile Commands
+tmail includes a Makefile with useful commands:
 
 ```bash
-# Run tests
-go test ./...
-
-# Format code
-go fmt ./...
-
-# Build the project
-go build -o tmail main.go
+make build           # Build the binary
+make test            # Run tests
+make install         # Install to $GOPATH/bin
+make install-global  # Install to /usr/local/bin
+make clean           # Remove build artifacts
+make fmt             # Format code
+make lint            # Run linter
+make release         # Build release binaries
 ```
 
-## Releasing
+### Release Process
 
-This project uses GoReleaser for building and publishing releases:
+1. Update version in `version.go`
+2. Create a tag: `git tag -a v0.1.0 -m "Version 0.1.0"`
+3. Push the tag: `git push origin v0.1.0`
+4. GitHub Actions will automatically build and create a release
 
-1. Create and push a new tag:
-```bash
-git tag -a v0.1.0 -m "First release"
-git push origin v0.1.0
-```
+### License
 
-2. GitHub Actions will automatically build and publish releases when new tags are pushed.
-
-## License
-
-MIT License
+Distributed under the MIT License. See `LICENSE` for more information.
