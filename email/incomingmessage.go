@@ -146,10 +146,10 @@ func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) erro
 	// Process each part of the message
 	partCount := 0
 	maxParts := 20 // Reasonable limit to avoid excessive processing
-	
+
 	for partCount < maxParts {
 		partCount++
-		
+
 		part, err := reader.NextPart()
 		if err != nil {
 			break
@@ -173,7 +173,7 @@ func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) erro
 				if plainText != "" {
 					break
 				}
-			} 
+			}
 		case *mail.AttachmentHeader:
 			// Just store attachment names, not the content
 			filename, err := header.Filename()

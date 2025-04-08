@@ -28,12 +28,12 @@ type EmailReader struct {
 // NewEmailReader creates a new email reader TUI
 func NewEmailReader(emails []*email.IncomingMessage, provider email.MailProvider) *EmailReader {
 	app := tview.NewApplication()
-	
+
 	reader := &EmailReader{
 		app:         app,
 		pages:       tview.NewPages(),
 		emails:      emails,
-		provider: provider,
+		provider:    provider,
 		currentView: "list",
 	}
 
@@ -299,7 +299,7 @@ func (r *EmailReader) showEmail(index int) {
 
 	// Add a separator
 	content.WriteString("\n[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
-	
+
 	content.WriteString(email.Body)
 
 	// Set the content view text
@@ -399,7 +399,7 @@ func (r *EmailReader) Run() error {
 			fmt.Printf("Recovered from panic in tview: %v\n", r)
 		}
 	}()
-	
+
 	// Start the application
 	r.app.SetRoot(r.pages, true).EnableMouse(true)
 	return r.app.Run()

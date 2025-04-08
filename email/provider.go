@@ -21,8 +21,8 @@ type MailProvider interface {
 
 var (
 	provider MailProvider
-	once             sync.Once
-	initErr          error
+	once     sync.Once
+	initErr  error
 )
 
 // CreateDefaultMailProvider creates a mail provider with default configuration

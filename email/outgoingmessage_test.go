@@ -21,7 +21,6 @@ func TestSanitizeAddresses(t *testing.T) {
 	}
 }
 
-
 func TestValidateEmailMessage_NilMessage(t *testing.T) {
 	err := validateEmailMessage(nil)
 	if err == nil {

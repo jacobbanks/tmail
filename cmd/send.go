@@ -5,10 +5,11 @@ import (
 	"os"
 
 	"github.com/jacobbanks/tmail/auth"
-	"github.com/jacobbanks/tmail/ui"
 	"github.com/jacobbanks/tmail/email"
+	"github.com/jacobbanks/tmail/ui"
 	"github.com/spf13/cobra"
 )
+
 // Flag for enabling debug mode
 var debugMode bool
 

@@ -51,7 +51,6 @@ func (p *GmailProvider) Connect() error {
 		return fmt.Errorf("failed to connect to IMAP server: %v", err)
 	}
 
-
 	err = client.Login(p.userInfo.Email, p.userInfo.AppPassword)
 	if err != nil {
 		client.Logout() // Clean up before returning error
@@ -129,7 +128,7 @@ func (p *GmailProvider) fetchMessages(limit int) ([]*imap.Message, error) {
 	if mailbox.Messages > uint32(limit) {
 		from = mailbox.Messages - uint32(limit) + 1
 	}
-	
+
 	seqSet.AddRange(from, mailbox.Messages)
 
 	section := &imap.BodySectionName{}

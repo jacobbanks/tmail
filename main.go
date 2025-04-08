@@ -19,6 +19,6 @@ func main() {
 	cmd.BuildDate = BuildDate
 	cmd.GitCommit = GitCommit
 	cmd.GitState = GitState
-	
+
 	cmd.Execute()
 }
