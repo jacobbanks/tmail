@@ -13,14 +13,14 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.24.1
+          go-version: '1.24.1'
 
       - name: Install dependencies
         run: |
@@ -48,14 +48,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'release'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.18
+          go-version: '1.24.1'
 
       - name: Build
         run: make build
@@ -66,14 +66,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.18
+          go-version: '1.24.1'
 
       - name: Install dependencies
         run: go mod download
@@ -84,15 +84,15 @@ jobs:
 
       - name: Update version
         run: |
-          echo "Updating version.go to $VERSION"
-          sed -i "s/Version = \"[^\"]*\"/Version = \"$VERSION\"/" version.go
-          cat version.go
+          echo "Updating version in main.go to $VERSION"
+          sed -i "s/Version   = \"[^\"]*\"/Version   = \"$VERSION\"/" main.go
+          cat main.go
 
       - name: Build release binaries
         run: make release
 
       - name: Upload binaries to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             build/tmail-${{ env.VERSION }}-*
