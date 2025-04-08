@@ -299,21 +299,8 @@ func (r *EmailReader) showEmail(index int) {
 
 	// Add a separator
 	content.WriteString("\n[blue]" + strings.Repeat("─", 60) + "[white]\n\n")
-
-	// Add the email body (either HTML-converted or plain text)
-	emailText := ""
-	if r.showHTML && email.HTMLBody != "" {
-		emailText = email.Body
-	} else {
-		emailText = email.Body
-	}
-
-	// Highlight links for better readability
-	if r.showHTML && email.IsHTML {
-		emailText = highlightLinks(emailText)
-	}
-
-	content.WriteString(emailText)
+	
+	content.WriteString(email.Body)
 
 	// Set the content view text
 	r.contentView.SetText(content.String())
@@ -386,15 +373,7 @@ func (r *EmailReader) updateStatusBar() {
 	if r.currentView == "list" {
 		r.statusBar.SetText("[blue]j/k[white]: Navigate | [blue]Enter[white]: View Email | [blue]q[white]: Quit")
 	} else {
-		htmlStatus := ""
-		if r.emails[r.emailList.GetCurrentItem()].HTMLBody != "" {
-			if r.showHTML {
-				htmlStatus = "[blue]h[white]: Show Plain Text | "
-			} else {
-				htmlStatus = "[blue]h[white]: Show HTML | "
-			}
-		}
-		r.statusBar.SetText("[blue]j/k[white]: Scroll | " + htmlStatus + "[blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
+		r.statusBar.SetText("[blue]j/k[white]: Scroll | [blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
 	}
 }
 

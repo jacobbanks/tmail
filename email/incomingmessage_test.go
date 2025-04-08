@@ -77,7 +77,7 @@ func TestCreateEmailFromEnvelope(t *testing.T) {
 		},
 	}
 
-	email := &Email{}
+	email := &IncomingMessage{}
 	err := createEmailFromEnvelope(email, envelope)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)

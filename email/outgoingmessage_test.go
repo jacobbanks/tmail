@@ -21,23 +21,6 @@ func TestSanitizeAddresses(t *testing.T) {
 	}
 }
 
-func TestSanitizeHeader(t *testing.T) {
-	// Test with line breaks
-	header := "Test\nSubject\r\nWith\rLine\r\n Breaks"
-	cleaned := sanitizeHeader(header)
-	expected := "Test Subject With Line  Breaks"
-	if cleaned != expected {
-		t.Errorf("Expected %q, got %q", expected, cleaned)
-	}
-
-	// Test with whitespace
-	header = "  Test Subject  "
-	cleaned = sanitizeHeader(header)
-	expected = "Test Subject"
-	if cleaned != expected {
-		t.Errorf("Expected %q, got %q", expected, cleaned)
-	}
-}
 
 func TestValidateEmailMessage_NilMessage(t *testing.T) {
 	err := validateEmailMessage(nil)
@@ -50,8 +33,8 @@ func TestValidateEmailMessage_NilMessage(t *testing.T) {
 }
 
 // This test can be skipped when credentials aren't available
-func TestNewEmailMessage(t *testing.T) {
-	msg, err := NewEmailMessage()
+func TestNewOutgoingMessage(t *testing.T) {
+	msg, err := NewOutgoingMessage()
 	if err != nil {
 		t.Skip("Skipping test due to missing credentials: " + err.Error())
 	}

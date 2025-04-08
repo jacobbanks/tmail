@@ -8,41 +8,37 @@ import (
 )
 
 // Test helper to create a fake email for testing UI components
-func createTestEmail() *email.Email {
-	return &email.Email{
+func createTestEmail() *email.IncomingMessage {
+	return &email.IncomingMessage{
 		From:        "test@example.com",
 		To:          "recipient@example.com",
 		Subject:     "Test Subject",
 		Date:        time.Now(),
 		Body:        "This is a test email body",
-		IsHTML:      false,
 		Attachments: []string{},
 	}
 }
 
-// Test helper to create a fake email with HTML content
-func createTestHTMLEmail() *email.Email {
-	return &email.Email{
+// Test helper to create a fake email with HTML-derived content
+func createTestHTMLEmail() *email.IncomingMessage {
+	return &email.IncomingMessage{
 		From:        "test@example.com",
 		To:          "recipient@example.com",
 		Subject:     "HTML Test Subject",
 		Date:        time.Now(),
-		Body:        "This is a test email body",
-		HTMLBody:    "<h1>HTML Content</h1><p>This is an HTML email</p>",
-		IsHTML:      true,
+		Body:        "This is a test email body that was converted from HTML",
 		Attachments: []string{},
 	}
 }
 
 // Test helper to create a fake email with attachments
-func createTestEmailWithAttachments() *email.Email {
-	return &email.Email{
+func createTestEmailWithAttachments() *email.IncomingMessage {
+	return &email.IncomingMessage{
 		From:        "test@example.com",
 		To:          "recipient@example.com",
 		Subject:     "Email with Attachments",
 		Date:        time.Now(),
 		Body:        "This is a test email with attachments",
-		IsHTML:      false,
 		Attachments: []string{"document.pdf", "image.jpg", "archive.zip"},
 	}
 }

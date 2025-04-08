@@ -11,7 +11,6 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-message"
 	"github.com/emersion/go-message/mail"
-	"github.com/jaytaylor/html2text"
 )
 
 type IncomingMessage struct {
@@ -20,9 +19,7 @@ type IncomingMessage struct {
 	Subject     string
 	Date        time.Time
 	Body        string
-	HTMLBody    string
-	IsHTML      bool
-	Attachments []string
+	Attachments []string // Only attachment names, not content
 }
 
 func (email *IncomingMessage) Parse(msg *imap.Message) error {
@@ -143,11 +140,16 @@ func extractHeaders(header mail.Header, email *IncomingMessage) error {
 }
 
 func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) error {
-	var plainText, htmlText string
-	var attachments []string
+	var plainText string
+	var attachmentNames []string
 
 	// Process each part of the message
-	for {
+	partCount := 0
+	maxParts := 20 // Reasonable limit to avoid excessive processing
+	
+	for partCount < maxParts {
+		partCount++
+		
 		part, err := reader.NextPart()
 		if err != nil {
 			break
@@ -164,58 +166,43 @@ func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) erro
 				continue
 			}
 
-			content := readContent(part.Body)
-
+			// Prioritize plain text for better memory efficiency
 			if strings.HasPrefix(contentType, "text/plain") {
-				plainText = content
-			} else if strings.HasPrefix(contentType, "text/html") {
-				htmlText = content
-			}
-
+				plainText = readContent(part.Body)
+				// Break early if we found plain text to avoid processing HTML
+				if plainText != "" {
+					break
+				}
+			} 
 		case *mail.AttachmentHeader:
-			// This is an attachment
+			// Just store attachment names, not the content
 			filename, err := header.Filename()
 			if err != nil {
 				filename = "unknown-attachment"
 			}
-			attachments = append(attachments, filename)
+			attachmentNames = append(attachmentNames, filename)
 		}
 	}
 
-	// Store both plain text and HTML content
+	// Store just what we need
 	email.Body = plainText
-	email.HTMLBody = htmlText
-	email.Attachments = attachments
-
-	// If we have HTML content and plain text is empty or user prefers HTML
-	userConfig, _ := LoadUserConfig()
-	if plainText == "" || (htmlText != "" && userConfig.ShowHTML) {
-		// Convert HTML to plain text for display
-		if htmlText != "" {
-			// Convert HTML to plain text for improved readability
-			plainTextFromHTML, err := html2text.FromString(htmlText)
-			if err == nil {
-				email.Body = plainTextFromHTML
-				email.IsHTML = true
-			}
-		}
-	}
+	email.Attachments = attachmentNames
 
 	// If we still have no content
-	if email.Body == "" && email.HTMLBody == "" {
+	if email.Body == "" {
 		email.Body = "(No content found)"
 	}
-
 	return nil
 }
 
 func readContent(reader io.Reader) string {
-	// Use a limit to avoid any issues with overly large messages
-	const maxReadSize = 10 * 1024 * 1024 // 10MB max
+	// Use a much smaller limit for terminal display
+	const maxReadSize = 1 * 1024 * 1024 // 1MB max for terminal display
 
 	lReader := io.LimitReader(reader, maxReadSize)
 
-	buf := new(bytes.Buffer)
+	// Use a fixed-size buffer for better memory management
+	buf := bytes.NewBuffer(make([]byte, 0, 32*1024)) // Pre-allocate 32KB
 	_, err := buf.ReadFrom(lReader)
 	if err != nil {
 		return "(Error reading content)"
@@ -223,7 +210,7 @@ func readContent(reader io.Reader) string {
 
 	// Check if we reached the limit
 	if buf.Len() >= maxReadSize {
-		return buf.String() + "\n\n[... Message truncated due to size ...]"
+		return buf.String()[:maxReadSize-256] + "\n\n[... Message truncated due to size ...]"
 	}
 
 	return buf.String()
