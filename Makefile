@@ -59,7 +59,7 @@ lint:
 release:
 	@echo "Building release binaries..."
 	@mkdir -p build
-	@VERSION=$$(grep -oP 'Version = "\K[^"]+' version.go)
+	@VERSION=$$(grep -oP 'Version = "\K[^"]+' main.go)
 	@BUILD_LDFLAGS="-X main.BuildDate=`date -u +%Y-%m-%dT%H:%M:%SZ` -X main.GitCommit=`git rev-parse --short HEAD` -X main.GitState=`if [ -n "$$(git status --porcelain 2>/dev/null)" ]; then echo "dirty"; else echo "clean"; fi`"
 	
 	@echo "Building for macOS (arm64)..."

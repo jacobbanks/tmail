@@ -15,6 +15,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// Execute runs the root command of the tmail CLI application.
+// It handles command-line parsing and dispatching to the appropriate subcommands.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {

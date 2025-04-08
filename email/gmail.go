@@ -36,6 +36,8 @@ func NewGmailProvider(config Config, userInfo auth.User) (*GmailProvider, error)
 	return provider, nil
 }
 
+// Connect establishes a connection to Gmail's IMAP server using the provider's credentials.
+// If already connected, it returns nil without reconnecting.
 func (p *GmailProvider) Connect() error {
 	if p.connected && p.client != nil {
 		return nil // Already connected
@@ -62,6 +64,8 @@ func (p *GmailProvider) Connect() error {
 	return nil
 }
 
+// Disconnect closes the IMAP connection to the Gmail server.
+// If already disconnected, returns nil without any action.
 func (p *GmailProvider) Disconnect() error {
 	if !p.connected || p.client == nil {
 		return nil // Already disconnected

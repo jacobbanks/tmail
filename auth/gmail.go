@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-// For backwards compatibility, maintain the User type as an alias of Credentials
+// User is an alias of Credentials type for backwards compatibility,
+// representing a user's authentication information.
 type User = Credentials
 
 // PromptForAuthentication prompts the user for their credentials

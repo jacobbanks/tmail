@@ -22,6 +22,7 @@ type UserConfig struct {
 	ShowHTML        bool   `json:"show_html"`     // Whether to show HTML emails
 }
 
+// DefaultConfig provides standard connection settings for Gmail's SMTP and IMAP servers.
 var DefaultConfig = Config{
 	SMTPHost: "smtp.gmail.com",
 	SMTPPort: "587",
@@ -29,16 +30,19 @@ var DefaultConfig = Config{
 	IMAPPort: "993",
 }
 
+// DefaultUserConfig provides default UI and behavior settings for the application.
 var DefaultUserConfig = UserConfig{
 	Theme:           "blue",
 	DefaultNumMails: 50,
 	ShowHTML:        true,
 }
 
+// GetSMTPAddress returns the complete SMTP server address with port for email sending.
 func (c *Config) GetSMTPAddress() string {
 	return c.SMTPHost + ":" + c.SMTPPort
 }
 
+// GetIMAPAddress returns the complete IMAP server address with port for email fetching.
 func (c *Config) GetIMAPAddress() string {
 	return c.IMAPHost + ":" + c.IMAPPort
 }

@@ -13,6 +13,9 @@ import (
 	"github.com/emersion/go-message/mail"
 )
 
+// IncomingMessage represents an email message received from a mail server.
+// It contains the essential fields from the email such as sender, recipient,
+// subject, date, and the message body in plain text format.
 type IncomingMessage struct {
 	From        string
 	To          string
@@ -22,6 +25,8 @@ type IncomingMessage struct {
 	Attachments []string // Only attachment names, not content
 }
 
+// Parse converts an IMAP message into an IncomingMessage structure.
+// It extracts headers, body content, and attachment information from the raw message.
 func (email *IncomingMessage) Parse(msg *imap.Message) error {
 	if msg == nil {
 		return fmt.Errorf("cannot parse a nil message")

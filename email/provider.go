@@ -7,6 +7,9 @@ import (
 	"github.com/jacobbanks/tmail/auth"
 )
 
+// MailProvider defines the interface for interacting with email providers.
+// It abstracts the details of connecting to email servers, sending and receiving
+// messages, and managing authentication.
 type MailProvider interface {
 	// Connection management
 	Connect() error

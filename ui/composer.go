@@ -26,11 +26,19 @@ type EmailComposer struct {
 	provider    email.MailProvider
 }
 
-const TO_FIELD = 0
-const CC_FIELD = 1
-const BCC_FIELD = 2
-const SUBJECT_FIELD = 3
-const ATTACHMENT_FIELD = 4
+// Form field indices for the email composer
+const (
+	// ToField is the index of the To field in the form
+	ToField = 0
+	// CcField is the index of the CC field in the form
+	CcField = 1
+	// BccField is the index of the BCC field in the form
+	BccField = 2
+	// SubjectField is the index of the Subject field in the form
+	SubjectField = 3
+	// AttachmentField is the index of the Attachment field in the form
+	AttachmentField = 4
+)
 
 // NewEmailComposer creates a new email composer TUI
 func NewEmailComposer(replyTo *email.IncomingMessage, provider email.MailProvider) *EmailComposer {
@@ -118,7 +126,7 @@ func (c *EmailComposer) createLayout(replyTo *email.IncomingMessage) {
 		attachText = strings.Join(fileNames, ", ")
 	}
 	c.form.AddInputField("Attachments:", attachText, 50, nil, nil)
-	c.form.GetFormItem(ATTACHMENT_FIELD).(*tview.InputField).SetDisabled(true)
+	c.form.GetFormItem(AttachmentField).(*tview.InputField).SetDisabled(true)
 
 	// Create form buttons
 	c.form.AddButton("Send", func() {
@@ -211,7 +219,7 @@ func (c *EmailComposer) updateAttachmentField() {
 		}
 		attachText = strings.Join(fileNames, ", ")
 	}
-	c.form.GetFormItem(ATTACHMENT_FIELD).(*tview.InputField).SetText(attachText)
+	c.form.GetFormItem(AttachmentField).(*tview.InputField).SetText(attachText)
 }
 
 // SetDebugMode enables or disables debug mode
@@ -300,10 +308,10 @@ func (c *EmailComposer) sendEmail() {
 	c.sending = true
 
 	// Get field values
-	toField := c.form.GetFormItem(TO_FIELD).(*tview.InputField)
-	ccField := c.form.GetFormItem(CC_FIELD).(*tview.InputField)
-	bccField := c.form.GetFormItem(BCC_FIELD).(*tview.InputField)
-	subjectField := c.form.GetFormItem(SUBJECT_FIELD).(*tview.InputField)
+	toField := c.form.GetFormItem(ToField).(*tview.InputField)
+	ccField := c.form.GetFormItem(CcField).(*tview.InputField)
+	bccField := c.form.GetFormItem(BccField).(*tview.InputField)
+	subjectField := c.form.GetFormItem(SubjectField).(*tview.InputField)
 
 	// Validate required fields
 	if toField.GetText() == "" {
