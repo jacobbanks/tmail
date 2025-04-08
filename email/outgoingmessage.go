@@ -88,7 +88,6 @@ func sanitizeAddresses(addresses []string) []string {
 	return clean
 }
 
-
 // TODO: Determine if I need this later.
 
 // SendEmail is a helper function that creates a mail provider
