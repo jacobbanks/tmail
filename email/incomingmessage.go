@@ -14,7 +14,7 @@ import (
 	"github.com/jaytaylor/html2text"
 )
 
-type Email struct {
+type IncomingMessage struct {
 	From        string
 	To          string
 	Subject     string
@@ -25,7 +25,7 @@ type Email struct {
 	Attachments []string
 }
 
-func (email *Email) Parse(msg *imap.Message) error {
+func (email *IncomingMessage) Parse(msg *imap.Message) error {
 	if msg == nil {
 		return fmt.Errorf("cannot parse a nil message")
 	}
@@ -59,7 +59,7 @@ func (email *Email) Parse(msg *imap.Message) error {
 	return nil
 }
 
-func createEmail(reader *mail.Reader, email *Email) error {
+func createEmail(reader *mail.Reader, email *IncomingMessage) error {
 	emailHeader := reader.Header
 	err := extractHeaders(emailHeader, email)
 	if err != nil {
@@ -96,7 +96,7 @@ func findBodyReader(msg *imap.Message) io.Reader {
 }
 
 // createEmailFromEnvelope creates a basic Email from just envelope data
-func createEmailFromEnvelope(email *Email, envelope *imap.Envelope) error {
+func createEmailFromEnvelope(email *IncomingMessage, envelope *imap.Envelope) error {
 	email.Subject = envelope.Subject
 	email.Date = envelope.Date
 
@@ -113,7 +113,7 @@ func createEmailFromEnvelope(email *Email, envelope *imap.Envelope) error {
 	return nil
 }
 
-func extractHeaders(header mail.Header, email *Email) error {
+func extractHeaders(header mail.Header, email *IncomingMessage) error {
 	from, err := header.AddressList("From")
 	if err != nil {
 		// Continue with empty From field
@@ -142,19 +142,15 @@ func extractHeaders(header mail.Header, email *Email) error {
 	return nil
 }
 
-func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
+func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) error {
 	var plainText, htmlText string
 	var attachments []string
 
 	// Process each part of the message
 	for {
 		part, err := reader.NextPart()
-		if err == io.EOF {
-			break
-		}
-
 		if err != nil {
-			continue
+			break
 		}
 
 		switch header := part.Header.(type) {
@@ -196,12 +192,8 @@ func extractBodyAndAttachments(reader *mail.Reader, email *Email) error {
 	if plainText == "" || (htmlText != "" && userConfig.ShowHTML) {
 		// Convert HTML to plain text for display
 		if htmlText != "" {
-			// Configure HTML to text options for better link formatting
-			options := &html2text.Options{
-				PrettyTables: true,
-				LinkStyle:    html2text.LinkStyleInline, // Show links as "text (url)" instead of "text [url]"
-			}
-			plainTextFromHTML, err := html2text.FromStringWithOptions(htmlText, options)
+			// Convert HTML to plain text for improved readability
+			plainTextFromHTML, err := html2text.FromString(htmlText)
 			if err == nil {
 				email.Body = plainTextFromHTML
 				email.IsHTML = true

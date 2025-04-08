@@ -15,21 +15,25 @@ import (
 type EmailReader struct {
 	app         *tview.Application
 	pages       *tview.Pages
-	emails      []*email.Email
+	emails      []*email.IncomingMessage
 	mainLayout  *tview.Flex
 	emailList   *tview.List
 	contentView *tview.TextView
 	statusBar   *tview.TextView
+	provider    email.MailProvider
 	currentView string // "list" or "content"
 	showHTML    bool   // whether to show HTML content
 }
 
 // NewEmailReader creates a new email reader TUI
-func NewEmailReader(emails []*email.Email) *EmailReader {
+func NewEmailReader(emails []*email.IncomingMessage, provider email.MailProvider) *EmailReader {
+	app := tview.NewApplication()
+	
 	reader := &EmailReader{
-		app:         tview.NewApplication(),
+		app:         app,
 		pages:       tview.NewPages(),
 		emails:      emails,
+		provider: provider,
 		currentView: "list",
 	}
 
@@ -333,7 +337,7 @@ func (r *EmailReader) replyToEmail(index int) {
 	r.app.Stop()
 
 	// Create and run a new email composer in reply mode
-	composer := NewEmailComposer(r.emails[index])
+	composer := NewEmailComposer(r.emails[index], r.provider)
 	composer.Run()
 }
 
@@ -410,6 +414,14 @@ func (r *EmailReader) Run() error {
 	// Initially focus on the email list
 	r.app.SetFocus(r.emailList)
 
+	// Add panic handler
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic in tview: %v\n", r)
+		}
+	}()
+	
 	// Start the application
-	return r.app.SetRoot(r.pages, true).EnableMouse(true).Run()
+	r.app.SetRoot(r.pages, true).EnableMouse(true)
+	return r.app.Run()
 }

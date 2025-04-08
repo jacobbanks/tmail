@@ -23,6 +23,7 @@ type EmailComposer struct {
 	attachments []string
 	debugMode   bool
 	sending     bool
+	provider    email.MailProvider
 }
 
 const TO_FIELD = 0
@@ -32,13 +33,15 @@ const SUBJECT_FIELD = 3
 const ATTACHMENT_FIELD = 4
 
 // NewEmailComposer creates a new email composer TUI
-func NewEmailComposer(replyTo *email.Email) *EmailComposer {
+func NewEmailComposer(replyTo *email.IncomingMessage, provider email.MailProvider) *EmailComposer {
 	composer := &EmailComposer{
 		app:         tview.NewApplication(),
 		pages:       tview.NewPages(),
 		debugMode:   false,
 		sending:     false,
 		attachments: []string{},
+		// eventually refactor to support multiple provider based on config
+		provider: provider,
 	}
 
 	// Create form and layout
@@ -79,7 +82,7 @@ func NewEmailComposer(replyTo *email.Email) *EmailComposer {
 }
 
 // createLayout sets up the UI components
-func (c *EmailComposer) createLayout(replyTo *email.Email) {
+func (c *EmailComposer) createLayout(replyTo *email.IncomingMessage) {
 	// Create the form
 	c.form = tview.NewForm()
 	c.form.SetBorder(true)
@@ -220,6 +223,7 @@ func (c *EmailComposer) SetDebugMode(debug bool) {
 func (c *EmailComposer) Run() error {
 	c.app.SetFocus(c.form)
 	c.updateStatus("Form Mode")
+	c.provider.Connect()
 	return c.app.SetRoot(c.pages, true).EnableMouse(true).Run()
 }
 
@@ -313,7 +317,7 @@ func (c *EmailComposer) sendEmail() {
 	}
 
 	// Create and populate email message
-	message, err := email.NewEmailMessage()
+	message, err := email.NewOutgoingMessage()
 	if err != nil {
 		c.showError(fmt.Sprintf("Error creating message: %v", err))
 		return
@@ -382,7 +386,7 @@ func (c *EmailComposer) sendEmail() {
 	c.app.SetRoot(statusLabel, true)
 
 	// Actually send the email
-	err = email.SendEmail(message)
+	err = c.provider.SendEmail(message)
 
 	// Handle results
 	if err != nil {

@@ -3,7 +3,6 @@ package email
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -70,7 +69,7 @@ func SaveUserConfig(config UserConfig) error {
 		return fmt.Errorf("failed to marshal config: %v", err)
 	}
 
-	if err := ioutil.WriteFile(configPath, data, 0600); err != nil {
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %v", err)
 	}
 
@@ -85,7 +84,7 @@ func LoadUserConfig() (UserConfig, error) {
 	}
 
 	configPath := filepath.Join(configDir, "config.json")
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// If file doesn't exist, save and return defaults

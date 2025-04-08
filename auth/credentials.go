@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 )
 
+
+// TODO: Create an interface for auth that allows for multiple provider authentication.
+
 // Credentials stores user authentication information
 type Credentials struct {
 	Email       string `json:"email"`

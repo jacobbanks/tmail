@@ -74,7 +74,7 @@ func runSimpleSend(cmd *cobra.Command, args []string) {
 	}
 
 	// Create email message
-	message, err := email.NewEmailMessage()
+	message, err := email.NewOutgoingMessage()
 	if err != nil {
 		fmt.Printf("Error creating message: %v\n", err)
 		os.Exit(1)
@@ -124,8 +124,15 @@ func runSimpleSend(cmd *cobra.Command, args []string) {
 
 	fmt.Println("Sending email...")
 
+	// Create mail provider
+	provider, err := email.CreateDefaultMailProvider()
+	if err != nil {
+		fmt.Printf("Error setting up mail provider: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Send email
-	err = email.SendEmail(message)
+	err = provider.SendEmail(message)
 	if err != nil {
 		fmt.Printf("Failed to send email: %v\n", err)
 		os.Exit(1)
