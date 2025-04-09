@@ -12,7 +12,7 @@ type MockProvider struct {
 	connected        bool
 	sentEmails       []*OutgoingMessage
 	storedEmails     []*IncomingMessage
-	userInfo         auth.User
+	userInfo         auth.Credentials
 	connectCalled    int
 	disconnectCalled int
 	sendCalled       int
@@ -39,7 +39,7 @@ func NewMockProvider() *MockProvider {
 				Attachments: []string{"attachment.pdf"},
 			},
 		},
-		userInfo: auth.User{
+		userInfo: auth.Credentials{
 			Email:       "user@example.com",
 			AppPassword: "testpassword",
 		},
@@ -83,7 +83,7 @@ func (m *MockProvider) GetEmails(limit int) ([]*IncomingMessage, error) {
 	return m.storedEmails[:limit], nil
 }
 
-func (m *MockProvider) GetUserInfo() (auth.User, error) {
+func (m *MockProvider) GetUserInfo() (auth.Credentials, error) {
 	return m.userInfo, nil
 }
 
@@ -203,7 +203,7 @@ func TestCreateDefaultMailProvider(t *testing.T) {
 
 // Mock tests for GmailProvider - these don't actually connect to Gmail
 func TestGmailProviderNoCredentials(t *testing.T) {
-	emptyUser := auth.User{}
+	emptyUser := auth.Credentials{}
 	_, err := NewGmailProvider(DefaultConfig, emptyUser)
 
 	if err == nil {

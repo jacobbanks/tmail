@@ -16,12 +16,12 @@ import (
 type GmailProvider struct {
 	client    *imapClient.Client
 	config    Config
-	userInfo  auth.User
+	userInfo  auth.Credentials
 	connected bool
 }
 
 // NewGmailProvider creates a new Gmail provider
-func NewGmailProvider(config Config, userInfo auth.User) (*GmailProvider, error) {
+func NewGmailProvider(config Config, userInfo auth.Credentials) (*GmailProvider, error) {
 	provider := &GmailProvider{
 		config:    config,
 		userInfo:  userInfo,
@@ -213,7 +213,7 @@ func (p *GmailProvider) QuickSend(to, subject, body string) error {
 }
 
 // GetUserInfo returns the user information
-func (p *GmailProvider) GetUserInfo() (auth.User, error) {
+func (p *GmailProvider) GetUserInfo() (auth.Credentials, error) {
 	return p.userInfo, nil
 }
 

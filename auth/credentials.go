@@ -65,7 +65,7 @@ func SaveCredentials(creds Credentials) error {
 }
 
 // LoadCredentials reads user credentials from the config file
-func LoadCredentials() (Credentials, error) {
+func LoadUser() (Credentials, error) {
 	path, err := getCredentialsPath()
 	if err != nil {
 		return Credentials{}, err

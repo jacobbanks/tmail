@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-// User is an alias of Credentials type for backwards compatibility,
-// representing a user's authentication information.
-type User = Credentials
-
 // PromptForAuthentication prompts the user for their credentials
 func PromptForAuthentication() (Credentials, error) {
 	var creds Credentials
@@ -59,14 +55,4 @@ func PromptForAuthentication() (Credentials, error) {
 
 	fmt.Println("Authentication setup complete!")
 	return creds, nil
-}
-
-// SaveUser is maintained for backwards compatibility
-func SaveUser(userInfo User) error {
-	return SaveCredentials(userInfo)
-}
-
-// LoadUser is maintained for backwards compatibility
-func LoadUser() (User, error) {
-	return LoadCredentials()
 }

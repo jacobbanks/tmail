@@ -19,7 +19,7 @@ type MailProvider interface {
 	SendEmail(message *OutgoingMessage) error
 	QuickSend(to, subject, body string) error
 	GetEmails(limit int) ([]*IncomingMessage, error)
-	GetUserInfo() (auth.User, error)
+	GetUserInfo() (auth.Credentials, error)
 }
 
 var (
