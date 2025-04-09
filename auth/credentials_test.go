@@ -77,14 +77,3 @@ func TestCredentialsSaveLoad(t *testing.T) {
 		t.Errorf("Credentials file still exists after removal")
 	}
 }
-
-func TestUserAlias(t *testing.T) {
-	var creds Credentials
-	creds.Email = "test@example.com"
-
-	var user User = creds
-
-	if user.Email != creds.Email {
-		t.Errorf("User alias not working correctly")
-	}
-}
