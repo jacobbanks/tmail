@@ -10,51 +10,86 @@ BINARY_NAME="tmail"
 INSTALL_DIR="/usr/local/bin"
 FALLBACK_DIR="$HOME/.local/bin"
 
-# Detect OS
+# Detect OS and ARCH
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
-# Normalize OS and ARCH
+# Normalize for asset naming
 case "$OS" in
-    Linux*)     OS="linux" ;;
-    Darwin*)    OS="darwin" ;;
+    Linux*)     OS_NAME="Linux" ;;
+    Darwin*)    OS_NAME="Darwin" ;;
+    MINGW*|MSYS*|CYGWIN*) OS_NAME="Windows" ;;
     *)          echo "Unsupported OS: $OS"; exit 1 ;;
 esac
 
 case "$ARCH" in
-    x86_64)     ARCH="amd64" ;;
-    arm64|aarch64) ARCH="arm64" ;;
+    x86_64)     ARCH_NAME="x86_64" ;;
+    arm64|aarch64) ARCH_NAME="arm64" ;;
+    i386)       ARCH_NAME="i386" ;;
     *)          echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-# GitHub API call to get latest release tag
+# Determine archive extension
+if [[ "$OS_NAME" == "Windows" ]]; then
+    EXT="zip"
+else
+    EXT="tar.gz"
+fi
+
+# Get latest release tag
 LATEST_TAG=$(curl -s "https://api.github.com/repos/${OWNER}/${REPO}/releases/latest" | grep tag_name | cut -d '"' -f 4)
 if [ -z "$LATEST_TAG" ]; then
     echo "Could not fetch the latest release tag."
     exit 1
 fi
 
-# Compose download URL
-FILENAME="${BINARY_NAME}-${OS}-${ARCH}"
-DOWNLOAD_URL="https://github.com/${OWNER}/${REPO}/releases/download/${LATEST_TAG}/${FILENAME}"
+# Build download URL
+ARCHIVE_NAME="${BINARY_NAME}_${OS_NAME}_${ARCH_NAME}.${EXT}"
+DOWNLOAD_URL="https://github.com/${OWNER}/${REPO}/releases/download/${LATEST_TAG}/${ARCHIVE_NAME}"
 
-# Download binary
-echo "📦 Downloading ${BINARY_NAME} ${LATEST_TAG} for ${OS}/${ARCH}..."
-curl -L "$DOWNLOAD_URL" -o "$BINARY_NAME"
-chmod +x "$BINARY_NAME"
+# Temp directory
+TMP_DIR=$(mktemp -d)
 
-# Try to install to INSTALL_DIR
+echo "📦 Downloading $ARCHIVE_NAME from $DOWNLOAD_URL..."
+curl -sL "$DOWNLOAD_URL" -o "$TMP_DIR/$ARCHIVE_NAME"
+
+# Extract archive
+cd "$TMP_DIR"
+echo "📂 Extracting..."
+
+if [[ "$EXT" == "tar.gz" ]]; then
+    tar -xzf "$ARCHIVE_NAME"
+elif [[ "$EXT" == "zip" ]]; then
+    unzip -q "$ARCHIVE_NAME"
+else
+    echo "❌ Unknown archive format: $EXT"
+    exit 1
+fi
+
+# Move binary to destination
+BIN_PATH="./${BINARY_NAME}"
+if [[ ! -f "$BIN_PATH" ]]; then
+    # Try to find it if it's inside a folder
+    BIN_PATH=$(find . -type f -name "$BINARY_NAME" | head -n 1)
+    if [[ -z "$BIN_PATH" ]]; then
+        echo "❌ Could not find binary in archive."
+        exit 1
+    fi
+fi
+
+chmod +x "$BIN_PATH"
+
 if [ -w "$INSTALL_DIR" ]; then
-    mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    mv "$BIN_PATH" "$INSTALL_DIR/$BINARY_NAME"
     INSTALL_PATH="$INSTALL_DIR/$BINARY_NAME"
 else
     echo "⚠️ No write permission for $INSTALL_DIR. Installing to $FALLBACK_DIR..."
     mkdir -p "$FALLBACK_DIR"
-    mv "$BINARY_NAME" "$FALLBACK_DIR/$BINARY_NAME"
+    mv "$BIN_PATH" "$FALLBACK_DIR/$BINARY_NAME"
     INSTALL_PATH="$FALLBACK_DIR/$BINARY_NAME"
 fi
 
-# Ensure it's in PATH
+# Add to PATH if needed
 if ! command -v "$BINARY_NAME" &> /dev/null; then
     echo "🔧 Adding $FALLBACK_DIR to PATH in your shell profile..."
 
