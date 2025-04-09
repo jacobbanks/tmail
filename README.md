@@ -108,27 +108,7 @@ tmail version
 - `Ctrl+S`: Send email
 - `Ctrl+Q/C`: Quit without sending
 
-### Makefile Commands
-tmail includes a Makefile with useful commands:
 
-```bash
-make build           # Build the binary
-make test            # Run tests
-make install         # Install to $GOPATH/bin
-make install-global  # Install to /usr/local/bin
-make clean           # Remove build artifacts
-make fmt             # Format code
-make lint            # Run linter
-make release         # Build release binaries
-```
-
-### Release Process
-
-1. Update version in `version.go`
-2. Create a tag: `git tag -a vx.x.x -m "Version x.x.x"`
-3. Push the tag: `git push origin vx.x.x`
-4. GitHub Actions will automatically build and create a release
 
 ### License
-
 Distributed under the MIT License. See `LICENSE` for more information.
