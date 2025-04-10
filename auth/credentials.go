@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/term"
 	"os"
 	"path/filepath"
 	"strings"
-	"golang.org/x/term"
 )
 
 // TODO: Create an interface for auth that allows for multiple provider authentication.
