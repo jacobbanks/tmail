@@ -20,6 +20,7 @@ Run this in your terminal (macOS/Linux):
 
 ```bash
 curl -sSf https://raw.githubusercontent.com/jacobbanks/tmail/main/install.sh | sh
+```
 
 ### First-time Setup
 Before using tmail, you need a Gmail App Password.
@@ -30,10 +31,7 @@ Under Select App, choose Mail
 Under Select Device, choose Other (Custom name) and enter tmail
 Click Generate
 Copy the 16-character password shown
-
-```bash
 tmail auth
-```
 
 You'll be prompted to enter:
 1. Your Gmail address
