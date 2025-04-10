@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"bufio"
 	"strings"
 )
 
@@ -19,7 +19,6 @@ type Credentials struct {
 }
 
 var isAuthed = false
-
 
 // PromptForAuthentication prompts the user for their credentials
 func (c *Credentials) PromptForAuthentication() error {

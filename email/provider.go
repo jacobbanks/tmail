@@ -48,4 +48,3 @@ func CreateDefaultMailProvider() (MailProvider, error) {
 	// Create provider with default config
 	return provider, initErr
 }
-

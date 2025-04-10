@@ -426,10 +426,10 @@ func (c *EmailComposer) showError(message string) {
 	modal.SetBackgroundColor(tcell.ColorDarkRed)
 	modal.SetTextColor(tcell.ColorWhite)
 	modal.AddButtons([]string{"OK"})
-	
+
 	// Reset sending state immediately to allow input
 	c.sending = false
-	
+
 	// Add button handler to return to the form
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		c.app.SetRoot(c.pages, true)
@@ -443,7 +443,7 @@ func (c *EmailComposer) showError(message string) {
 		AddItem(nil, 0, 1, false).
 		AddItem(modal, 10, 1, true).
 		AddItem(nil, 0, 1, false)
-		
+
 	modalFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// Handle Escape or Enter to dismiss dialog
 		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyEnter {

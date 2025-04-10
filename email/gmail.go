@@ -18,8 +18,6 @@ type GmailProvider struct {
 	connected bool
 }
 
-
-
 // Connect establishes a connection to Gmail's IMAP server using the provider's credentials.
 // If already connected, it returns nil without reconnecting.
 func (p *GmailProvider) Connect() error {
@@ -31,7 +29,7 @@ func (p *GmailProvider) Connect() error {
 	if p.userInfo.Email == "" || p.userInfo.AppPassword == "" {
 		return fmt.Errorf("missing email credentials - please set up your account first")
 	}
-	
+
 	// Initialize SMTP auth if not already done
 	if p.smtpAuth == nil {
 		p.smtpAuth = smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
@@ -173,7 +171,6 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 	if p.smtpAuth == nil {
 		p.smtpAuth = smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
 	}
-
 
 	defer p.Disconnect()
 	// Use cached SMTP auth

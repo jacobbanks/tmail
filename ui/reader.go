@@ -54,7 +54,7 @@ func (r *EmailReader) setupUI() {
 
 	// Add "main" page to the pages component
 	r.pages.AddPage("main", r.mainLayout, true, true)
-	
+
 	// Start loading emails in background if necessary
 	if r.isLoading {
 		r.showLoading()
@@ -354,7 +354,7 @@ func highlightLinks(text string) string {
 func (r *EmailReader) populateEmailList() {
 	// Clear existing items
 	r.emailList.Clear()
-	
+
 	// Add emails to the list
 	for i, email := range r.emails {
 		// Format the date for display
@@ -400,14 +400,14 @@ func (r *EmailReader) setupLoadingModal() {
 	text.SetText("Loading emails...\n\nPlease wait")
 	text.SetTextAlign(tview.AlignCenter)
 	text.SetDynamicColors(true)
-	
+
 	// Create a frame around the text
 	frame := tview.NewFrame(text)
 	frame.SetBorders(1, 1, 1, 1, 2, 2)
 	frame.SetBorder(true)
 	frame.SetTitle(" Loading ")
 	frame.SetTitleAlign(tview.AlignCenter)
-	
+
 	// Save the loading modal
 	r.loadingModal = frame
 }
@@ -424,7 +424,7 @@ func (r *EmailReader) showLoading() {
 			AddItem(nil, 0, 1, false),
 		40, 1, true)
 	flex.AddItem(nil, 0, 1, false)
-	
+
 	// Add loading page
 	r.pages.AddPage("loading", flex, true, true)
 }
@@ -448,7 +448,7 @@ func (r *EmailReader) fetchEmails() {
 
 	// Then fetch emails
 	emails, err := r.provider.GetEmails(25)
-	
+
 	// Update UI on main thread
 	r.app.QueueUpdateDraw(func() {
 		if err != nil {
@@ -471,7 +471,7 @@ func (r *EmailReader) showModalError(message string) {
 	modal.SetBackgroundColor(tcell.ColorDarkRed)
 	modal.SetTextColor(tcell.ColorWhite)
 	modal.AddButtons([]string{"OK"})
-	
+
 	// Add button handler to return to the form
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		r.pages.SwitchToPage("main")
