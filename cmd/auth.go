@@ -24,14 +24,10 @@ var authCmd = &cobra.Command{
 			}
 		}
 
-		_, err = auth.PromptForAuthentication()
+		err = auth.PromptForAuthentication()
 		if err != nil {
 			fmt.Printf("Authentication setup failed: %v\n", err)
 			os.Exit(1)
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(authCmd)
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"golang.org/x/term"
 )
 
 // TODO: Create an interface for auth that allows for multiple provider authentication.
@@ -21,7 +22,7 @@ type Credentials struct {
 var isAuthed = false
 
 // PromptForAuthentication prompts the user for their credentials
-func (c *Credentials) PromptForAuthentication() error {
+func PromptForAuthentication() error {
 	var creds Credentials
 	reader := bufio.NewReader(os.Stdin)
 
@@ -43,12 +44,11 @@ func (c *Credentials) PromptForAuthentication() error {
 
 	// Get app password
 	fmt.Print("What is your Gmail app password? If you haven't set one up, please see the README for instructions. ")
-	password, err := reader.ReadString('\n')
+	bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return fmt.Errorf("failed to read password: %v", err)
 	}
-	creds.AppPassword = strings.TrimSpace(password)
-
+	creds.AppPassword = strings.TrimSpace(string(bytePassword))
 	// Confirm the information
 	fmt.Printf("\nName: %s\nEmail: %s\nPassword: (hidden)\n", creds.Name, creds.Email)
 	fmt.Print("Is this information correct? (y/n): ")

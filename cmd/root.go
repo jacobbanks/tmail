@@ -27,6 +27,7 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(readCmd)
+	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(sendCmd)
-	// Auth command is registered in auth.go
+	sendCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode for troubleshooting")
 }
