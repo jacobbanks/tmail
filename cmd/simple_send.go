@@ -18,6 +18,7 @@ var simpleSendCmd = &cobra.Command{
 	Run:   runSimpleSend,
 }
 
+// Used for testing during development
 func init() {
 	rootCmd.AddCommand(simpleSendCmd)
 }

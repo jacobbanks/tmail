@@ -13,15 +13,17 @@ import (
 
 // EmailReader implements a TUI for reading emails
 type EmailReader struct {
-	app         *tview.Application
-	pages       *tview.Pages
-	emails      []*email.IncomingMessage
-	mainLayout  *tview.Flex
-	emailList   *tview.List
-	contentView *tview.TextView
-	statusBar   *tview.TextView
-	provider    email.MailProvider
-	currentView string // "list" or "content"
+	app          *tview.Application
+	pages        *tview.Pages
+	emails       []*email.IncomingMessage
+	mainLayout   *tview.Flex
+	emailList    *tview.List
+	contentView  *tview.TextView
+	statusBar    *tview.TextView
+	loadingModal tview.Primitive
+	provider     email.MailProvider
+	currentView  string // "list" or "content"
+	isLoading    bool
 }
 
 // NewEmailReader creates a new email reader TUI
@@ -34,6 +36,7 @@ func NewEmailReader(emails []*email.IncomingMessage, provider email.MailProvider
 		emails:      emails,
 		provider:    provider,
 		currentView: "list",
+		isLoading:   emails == nil, // If no emails provided, we'll load them in background
 	}
 
 	reader.setupUI()
@@ -47,9 +50,16 @@ func (r *EmailReader) setupUI() {
 	r.setupStatusBar()
 	r.setupMainLayout()
 	r.setupKeybindings()
+	r.setupLoadingModal()
 
 	// Add "main" page to the pages component
 	r.pages.AddPage("main", r.mainLayout, true, true)
+	
+	// Start loading emails in background if necessary
+	if r.isLoading {
+		r.showLoading()
+		go r.fetchEmails()
+	}
 }
 
 // setupEmailList creates and configures the email list
@@ -83,41 +93,9 @@ func (r *EmailReader) setupEmailList() {
 	r.emailList.SetHighlightFullLine(true)
 	r.emailList.SetWrapAround(false)
 
-	// Add emails to the list
-	for i, email := range r.emails {
-		// Format the date for display
-		date := email.Date.Format("2006-01-02 15:04")
-
-		// Format the subject (truncate if too long)
-		subject := email.Subject
-		if len(subject) > 40 {
-			subject = subject[:37] + "..."
-		}
-
-		// Format the sender (extract just the name or email address)
-		sender := email.From
-		if idx := strings.LastIndex(sender, "<"); idx > 0 {
-			sender = strings.TrimSpace(sender[:idx])
-		}
-		if len(sender) > 25 {
-			sender = sender[:22] + "..."
-		}
-
-		// Add attachment indicator if needed
-		attachmentIndicator := ""
-		if len(email.Attachments) > 0 {
-			attachmentIndicator = "📎 "
-		}
-
-		// Create list item with formatted details
-		text := fmt.Sprintf("%s  %s%s", date, attachmentIndicator, subject)
-		secondaryText := fmt.Sprintf("From: %s", sender)
-
-		// Create a fixed value for the closure to capture
-		index := i
-		r.emailList.AddItem(text, secondaryText, rune('a'+i), func() {
-			r.showEmail(index)
-		})
+	// Only populate if we have emails already
+	if r.emails != nil {
+		r.populateEmailList()
 	}
 }
 
@@ -372,10 +350,158 @@ func highlightLinks(text string) string {
 	return coloredText
 }
 
+// populateEmailList adds emails to the list view
+func (r *EmailReader) populateEmailList() {
+	// Clear existing items
+	r.emailList.Clear()
+	
+	// Add emails to the list
+	for i, email := range r.emails {
+		// Format the date for display
+		date := email.Date.Format("2006-01-02 15:04")
+
+		// Format the subject (truncate if too long)
+		subject := email.Subject
+		if len(subject) > 40 {
+			subject = subject[:37] + "..."
+		}
+
+		// Format the sender (extract just the name or email address)
+		sender := email.From
+		if idx := strings.LastIndex(sender, "<"); idx > 0 {
+			sender = strings.TrimSpace(sender[:idx])
+		}
+		if len(sender) > 25 {
+			sender = sender[:22] + "..."
+		}
+
+		// Add attachment indicator if needed
+		attachmentIndicator := ""
+		if len(email.Attachments) > 0 {
+			attachmentIndicator = "📎 "
+		}
+
+		// Create list item with formatted details
+		text := fmt.Sprintf("%s  %s%s", date, attachmentIndicator, subject)
+		secondaryText := fmt.Sprintf("From: %s", sender)
+
+		// Create a fixed value for the closure to capture
+		index := i
+		r.emailList.AddItem(text, secondaryText, rune('a'+i), func() {
+			r.showEmail(index)
+		})
+	}
+}
+
+// setupLoadingModal creates a loading indicator
+func (r *EmailReader) setupLoadingModal() {
+	// Create a modal with a spinner and loading message
+	text := tview.NewTextView()
+	text.SetText("Loading emails...\n\nPlease wait")
+	text.SetTextAlign(tview.AlignCenter)
+	text.SetDynamicColors(true)
+	
+	// Create a frame around the text
+	frame := tview.NewFrame(text)
+	frame.SetBorders(1, 1, 1, 1, 2, 2)
+	frame.SetBorder(true)
+	frame.SetTitle(" Loading ")
+	frame.SetTitleAlign(tview.AlignCenter)
+	
+	// Save the loading modal
+	r.loadingModal = frame
+}
+
+// showLoading displays the loading modal
+func (r *EmailReader) showLoading() {
+	// Center the loading modal
+	flex := tview.NewFlex()
+	flex.AddItem(nil, 0, 1, false)
+	flex.AddItem(
+		tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(r.loadingModal, 7, 1, true).
+			AddItem(nil, 0, 1, false),
+		40, 1, true)
+	flex.AddItem(nil, 0, 1, false)
+	
+	// Add loading page
+	r.pages.AddPage("loading", flex, true, true)
+}
+
+// hideLoading removes the loading modal
+func (r *EmailReader) hideLoading() {
+	r.isLoading = false
+	r.pages.SwitchToPage("main")
+	r.app.SetFocus(r.emailList)
+}
+
+// fetchEmails loads emails in background
+func (r *EmailReader) fetchEmails() {
+	// First connect to the provider
+	if err := r.provider.Connect(); err != nil {
+		r.app.QueueUpdateDraw(func() {
+			r.showModalError(fmt.Sprintf("Error connecting to mail server: %v", err))
+		})
+		return
+	}
+
+	// Then fetch emails
+	emails, err := r.provider.GetEmails(25)
+	
+	// Update UI on main thread
+	r.app.QueueUpdateDraw(func() {
+		if err != nil {
+			r.showModalError(fmt.Sprintf("Error loading emails: %v", err))
+		} else if len(emails) == 0 {
+			r.showModalError("No emails found.")
+		} else {
+			r.emails = emails
+			r.populateEmailList()
+			r.hideLoading()
+		}
+	})
+}
+
+// showModalError displays an error message in a modal dialog
+func (r *EmailReader) showModalError(message string) {
+	// Create modal dialog
+	modal := tview.NewModal()
+	modal.SetText(message)
+	modal.SetBackgroundColor(tcell.ColorDarkRed)
+	modal.SetTextColor(tcell.ColorWhite)
+	modal.AddButtons([]string{"OK"})
+	
+	// Add button handler to return to the form
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		r.pages.SwitchToPage("main")
+		r.app.SetFocus(r.emailList)
+		r.hideLoading()
+	})
+
+	// Use a flex container to center the modal
+	flex := tview.NewFlex()
+	flex.AddItem(nil, 0, 1, false)
+	flex.AddItem(tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(nil, 0, 1, false).
+		AddItem(modal, 10, 1, true).
+		AddItem(nil, 0, 1, false),
+		60, 1, true)
+	flex.AddItem(nil, 0, 1, false)
+
+	// Show error
+	r.pages.AddPage("error", flex, true, true)
+	r.pages.SwitchToPage("error")
+	r.app.SetFocus(modal)
+}
+
 // Run starts the email reader application
 func (r *EmailReader) Run() error {
-	// Initially focus on the email list
-	r.app.SetFocus(r.emailList)
+	// Initially focus on the email list if not loading
+	if !r.isLoading {
+		r.app.SetFocus(r.emailList)
+	}
 
 	// Add panic handler
 	defer func() {

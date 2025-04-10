@@ -18,22 +18,7 @@ type GmailProvider struct {
 	connected bool
 }
 
-// NewGmailProvider creates a new Gmail provider
-func NewGmailProvider(config Config, userInfo auth.Credentials) (*GmailProvider, error) {
-	provider := &GmailProvider{
-		config:    config,
-		userInfo:  userInfo,
-		connected: false,
-	}
 
-	// Initialize SMTP auth to reuse
-	if userInfo.Email != "" && userInfo.AppPassword != "" {
-		provider.smtpAuth = smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
-	}
-
-	// Connect lazily - don't connect immediately
-	return provider, nil
-}
 
 // Connect establishes a connection to Gmail's IMAP server using the provider's credentials.
 // If already connected, it returns nil without reconnecting.
@@ -213,6 +198,22 @@ func (p *GmailProvider) QuickSend(to, subject, body string) error {
 // GetUserInfo returns the user information
 func (p *GmailProvider) GetUserInfo() (auth.Credentials, error) {
 	return p.userInfo, nil
+}
+
+// NewGmailProvider creates a new Gmail provider and connects immediately
+func NewGmailProvider(config Config, userInfo auth.Credentials) (*GmailProvider, error) {
+	provider := &GmailProvider{
+		config:    config,
+		userInfo:  userInfo,
+		connected: false,
+	}
+
+	// Initialize SMTP auth to reuse
+	if userInfo.Email != "" && userInfo.AppPassword != "" {
+		provider.smtpAuth = smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
+	}
+
+	return provider, nil
 }
 
 // validateEmailMessage verifies that an email message is valid

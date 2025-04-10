@@ -35,14 +35,17 @@ func CreateDefaultMailProvider() (MailProvider, error) {
 		if err != nil {
 			log.Println("Cannot load user while creating mail provider")
 			initErr = err
+			return
 		}
 		provider, err = NewGmailProvider(DefaultConfig, userInfo)
 		if err != nil {
 			log.Println("Cannot get Default Mail Provider")
 			initErr = err
+			return
 		}
 		initErr = nil
 	})
 	// Create provider with default config
 	return provider, initErr
 }
+
