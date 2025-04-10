@@ -61,8 +61,4 @@ func TestNewOutgoingMessage(t *testing.T) {
 	if msg.Body != "" {
 		t.Errorf("Expected Body to be empty, got %s", msg.Body)
 	}
-
-	if msg.IsHTML {
-		t.Errorf("Expected IsHTML to be false")
-	}
 }

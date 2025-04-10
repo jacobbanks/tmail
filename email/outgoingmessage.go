@@ -18,7 +18,6 @@ type OutgoingMessage struct {
 	Bcc         []string
 	Subject     string
 	Body        string
-	IsHTML      bool
 	Attachments []string // Paths to attachment files
 }
 
@@ -63,7 +62,6 @@ func (e *OutgoingMessage) AddBCC(email string) {
 // SetTextBody sets the message body as plain text content and marks the message accordingly.
 func (e *OutgoingMessage) SetTextBody(textContent string) {
 	e.Body = textContent
-	e.IsHTML = false
 }
 
 // AddAttachment adds a file as an attachment

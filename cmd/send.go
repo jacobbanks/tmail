@@ -37,5 +37,6 @@ var sendCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(sendCmd)
+	// used for testing
 	sendCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode for troubleshooting")
 }

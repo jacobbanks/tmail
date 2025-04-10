@@ -15,8 +15,7 @@ var configCmd = &cobra.Command{
 Examples:
   tmail config show
   tmail config set theme blue
-  tmail config set default_mails 25
-  tmail config set show_html true`,
+  tmail config set default_mails 25`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			cmd.Help()
@@ -55,7 +54,6 @@ func showConfig() {
 	fmt.Println("--------------------")
 	fmt.Printf("Theme: %s\n", config.Theme)
 	fmt.Printf("Default emails to fetch: %d\n", config.DefaultNumMails)
-	fmt.Printf("Show HTML emails: %t\n", config.ShowHTML)
 }
 
 func setSetting(setting, value string) {
@@ -82,19 +80,9 @@ func setSetting(setting, value string) {
 		}
 		config.DefaultNumMails = num
 		fmt.Printf("Default emails to fetch set to: %d\n", num)
-
-	case "show_html":
-		show, err := strconv.ParseBool(value)
-		if err != nil {
-			fmt.Println("Invalid value. Please use true or false")
-			return
-		}
-		config.ShowHTML = show
-		fmt.Printf("Show HTML emails set to: %t\n", show)
-
 	default:
 		fmt.Printf("Unknown setting: %s\n", setting)
-		fmt.Println("Valid settings: theme, default_mails, show_html")
+		fmt.Println("Valid settings: theme, default_mails")
 		return
 	}
 

@@ -174,7 +174,6 @@ func extractBodyAndAttachments(reader *mail.Reader, email *IncomingMessage) erro
 			// Prioritize plain text for better memory efficiency
 			if strings.HasPrefix(contentType, "text/plain") {
 				plainText = readContent(part.Body)
-				// Break early if we found plain text to avoid processing HTML
 				if plainText != "" {
 					break
 				}

@@ -178,12 +178,7 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 	e.Cc = message.Cc
 	e.Bcc = message.Bcc
 	e.Subject = message.Subject
-
-	if message.IsHTML {
-		e.HTML = []byte(message.Body)
-	} else {
-		e.Text = []byte(message.Body)
-	}
+	e.Text = []byte(message.Body)
 
 	// Add attachments
 	for _, attachPath := range message.Attachments {

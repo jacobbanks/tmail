@@ -22,7 +22,6 @@ type EmailReader struct {
 	statusBar   *tview.TextView
 	provider    email.MailProvider
 	currentView string // "list" or "content"
-	showHTML    bool   // whether to show HTML content
 }
 
 // NewEmailReader creates a new email reader TUI
@@ -36,10 +35,6 @@ func NewEmailReader(emails []*email.IncomingMessage, provider email.MailProvider
 		provider:    provider,
 		currentView: "list",
 	}
-
-	// Apply user configuration
-	config, _ := email.LoadUserConfig()
-	reader.showHTML = config.ShowHTML
 
 	reader.setupUI()
 	return reader
@@ -259,16 +254,6 @@ func (r *EmailReader) setupKeybindings() {
 					}
 					return nil
 				}
-			case 'h':
-				// Toggle between HTML and plain text view
-				if r.currentView == "content" {
-					r.showHTML = !r.showHTML
-					index := r.emailList.GetCurrentItem()
-					if index >= 0 && index < len(r.emails) {
-						r.showEmail(index)
-					}
-					return nil
-				}
 			}
 		}
 		return event
@@ -336,7 +321,6 @@ func (r *EmailReader) showHelp() {
 			"Enter: View selected email\n" +
 			"Esc: Return to email list\n" +
 			"r: Reply to current email\n" +
-			"h: Toggle HTML/plain text view\n" +
 			"q: Quit\n" +
 			"?: Show this help").
 		AddButtons([]string{"OK"}).

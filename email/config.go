@@ -19,7 +19,6 @@ type Config struct {
 type UserConfig struct {
 	Theme           string `json:"theme"`         // UI color theme
 	DefaultNumMails int    `json:"default_mails"` // Number of emails to fetch
-	ShowHTML        bool   `json:"show_html"`     // Whether to show HTML emails
 }
 
 // DefaultConfig provides standard connection settings for Gmail's SMTP and IMAP servers.
@@ -34,7 +33,6 @@ var DefaultConfig = Config{
 var DefaultUserConfig = UserConfig{
 	Theme:           "blue",
 	DefaultNumMails: 50,
-	ShowHTML:        true,
 }
 
 // GetSMTPAddress returns the complete SMTP server address with port for email sending.
