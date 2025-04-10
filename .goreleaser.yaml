@@ -1,5 +1,4 @@
 version: 2
-curl -sSf https://raw.githubusercontent.com/jacobbanks/tmail/main/install.sh | sh
 
 before:
   hooks:
