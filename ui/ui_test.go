@@ -7,6 +7,7 @@ import (
 	"github.com/jacobbanks/tmail/email"
 )
 
+// TODO: Implement these tests, skipping for now.
 // Test helper to create a fake email for testing UI components
 func createTestEmail() *email.IncomingMessage {
 	return &email.IncomingMessage{

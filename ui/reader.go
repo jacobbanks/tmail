@@ -10,6 +10,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// TODO: Refactor UI code to implment interface and dependency injection to make testing easier. 
+
 // EmailReader implements a TUI for reading emails
 type EmailReader struct {
 	app          *tview.Application

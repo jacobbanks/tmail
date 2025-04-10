@@ -12,6 +12,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// TODO: Refactor UI code to implment interface and dependency injection to allow for testing. 
+
 // EmailComposer implements a basic TUI for composing emails
 type EmailComposer struct {
 	app         *tview.Application
