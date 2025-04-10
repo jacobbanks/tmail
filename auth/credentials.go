@@ -16,6 +16,8 @@ type Credentials struct {
 	Name        string `json:"name"`
 }
 
+var isAuthed = false
+
 // getConfigDir returns the directory where configuration is stored
 func getConfigDir() (string, error) {
 	// Get user's home directory
@@ -61,12 +63,18 @@ func SaveCredentials(creds Credentials) error {
 		return fmt.Errorf("unable to write credentials file: %v", err)
 	}
 
+	isAuthed = true
+
 	return nil
 }
 
 // LoadCredentials reads user credentials from the config file
 func LoadUser() (Credentials, error) {
 	path, err := getCredentialsPath()
+	var creds Credentials
+	if isAuthed == true {
+		return creds, nil
+	}
 	if err != nil {
 		return Credentials{}, err
 	}
@@ -78,7 +86,6 @@ func LoadUser() (Credentials, error) {
 	}
 
 	// Unmarshal JSON
-	var creds Credentials
 	if err := json.Unmarshal(data, &creds); err != nil {
 		return Credentials{}, fmt.Errorf("unable to parse credentials file: %v", err)
 	}
@@ -88,6 +95,9 @@ func LoadUser() (Credentials, error) {
 
 // RemoveCredentials deletes the credentials file
 func RemoveCredentials() error {
+	if isAuthed == false {
+		return nil
+	}
 	path, err := getCredentialsPath()
 	if err != nil {
 		return err
@@ -96,6 +106,6 @@ func RemoveCredentials() error {
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to remove credentials file: %v", err)
 	}
-
+	isAuthed = false
 	return nil
 }

@@ -68,7 +68,7 @@ func (m *MockProvider) QuickSend(to, subject, body string) error {
 	msg := &OutgoingMessage{
 		To:      []string{to},
 		Subject: subject,
-		Body:    body,
+		Text:    []byte(body),
 	}
 	return m.SendEmail(msg)
 }
@@ -130,7 +130,7 @@ func TestProviderEmailOperations(t *testing.T) {
 	testMessage := &OutgoingMessage{
 		To:      []string{"recipient@example.com"},
 		Subject: "Test Subject",
-		Body:    "Test Body",
+		Text:    []byte("Test Body"),
 	}
 
 	err := mock.SendEmail(testMessage)

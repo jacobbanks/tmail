@@ -58,7 +58,7 @@ func TestNewOutgoingMessage(t *testing.T) {
 		t.Errorf("Expected Subject to be empty, got %s", msg.Subject)
 	}
 
-	if msg.Body != "" {
-		t.Errorf("Expected Body to be empty, got %s", msg.Body)
+	if len(msg.Text) > 0 {
+		t.Errorf("Expected Body to be empty, got %s", msg.Text)
 	}
 }

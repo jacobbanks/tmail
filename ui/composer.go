@@ -363,9 +363,9 @@ func (c *EmailComposer) sendEmail() {
 	message.SetTextBody(c.bodyArea.GetText())
 
 	// Add attachments
-	for _, attachPath := range c.attachments {
-		if err := message.AddAttachment(attachPath); err != nil {
-			c.showError(fmt.Sprintf("Error adding attachment %s: %v", filepath.Base(attachPath), err))
+	for _, path := range c.attachments {
+		if err := message.AppendAttachmentPath(path); err != nil {
+			c.showError(fmt.Sprintf("Error adding attachment %s: %v", filepath.Base(path), err))
 			return
 		}
 	}

@@ -3,13 +3,10 @@ package email
 import (
 	"fmt"
 	"net/smtp"
-	"os"
-	"path/filepath"
 
 	"github.com/emersion/go-imap"
 	imapClient "github.com/emersion/go-imap/client"
 	"github.com/jacobbanks/tmail/auth"
-	jmail "github.com/jordan-wright/email"
 )
 
 // GmailProvider implements the MailProvider interface for Gmail
@@ -171,18 +168,18 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 		return err
 	}
 
-	e := jmail.NewEmail()
-
-	e.From = message.From
-	e.To = message.To
-	e.Cc = message.Cc
-	e.Bcc = message.Bcc
-	e.Subject = message.Subject
-	e.Text = []byte(message.Body)
+	// e := jmail.NewEmail()
+	//
+	// e.From = message.From
+	// e.To = message.To
+	// e.Cc = message.Cc
+	// e.Bcc = message.Bcc
+	// e.Subject = message.Subject
+	// e.Text = []byte(message.Text)
 
 	// Add attachments
-	for _, attachPath := range message.Attachments {
-		if _, err := e.AttachFile(attachPath); err != nil {
+	for _, path := range message.AttachmentPaths {
+		if _, err := message.PrepAttachment(path); err != nil {
 			return err
 		}
 	}
@@ -190,7 +187,7 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 	// Create SMTP auth
 	auth := smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
 
-	return e.Send(p.config.GetSMTPAddress(), auth)
+	return message.SendMessage(p.config.GetSMTPAddress(), auth)
 }
 
 // QuickSend provides a simple way to send a text email
@@ -220,13 +217,6 @@ func validateEmailMessage(message *OutgoingMessage) error {
 
 	if len(message.To) == 0 && len(message.Cc) == 0 && len(message.Bcc) == 0 {
 		return fmt.Errorf("email must have at least one recipient")
-	}
-
-	// Validate attachments
-	for _, path := range message.Attachments {
-		if _, err := os.Stat(path); err != nil {
-			return fmt.Errorf("attachment not found: %s", filepath.Base(path))
-		}
 	}
 
 	return nil
