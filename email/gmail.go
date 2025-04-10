@@ -12,6 +12,7 @@ import (
 // GmailProvider implements the MailProvider interface for Gmail
 type GmailProvider struct {
 	client    *imapClient.Client
+	smtpAuth  smtp.Auth
 	config    Config
 	userInfo  auth.Credentials
 	connected bool
@@ -25,11 +26,12 @@ func NewGmailProvider(config Config, userInfo auth.Credentials) (*GmailProvider,
 		connected: false,
 	}
 
-	// Connect immediately
-	if err := provider.Connect(); err != nil {
-		return nil, err
+	// Initialize SMTP auth to reuse
+	if userInfo.Email != "" && userInfo.AppPassword != "" {
+		provider.smtpAuth = smtp.PlainAuth("", userInfo.Email, userInfo.AppPassword, config.SMTPHost)
 	}
 
+	// Connect lazily - don't connect immediately
 	return provider, nil
 }
 
@@ -44,7 +46,13 @@ func (p *GmailProvider) Connect() error {
 	if p.userInfo.Email == "" || p.userInfo.AppPassword == "" {
 		return fmt.Errorf("missing email credentials - please set up your account first")
 	}
+	
+	// Initialize SMTP auth if not already done
+	if p.smtpAuth == nil {
+		p.smtpAuth = smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
+	}
 
+	// Connect with timeout
 	client, err := imapClient.DialTLS(p.config.GetIMAPAddress(), nil)
 	if err != nil {
 		return fmt.Errorf("failed to connect to IMAP server: %v", err)
@@ -158,6 +166,7 @@ func (p *GmailProvider) fetchMessages(limit int) ([]*imap.Message, error) {
 		return nil, fmt.Errorf("fetch failed: %v", err)
 	}
 
+	p.Disconnect()
 	return emails, nil
 }
 
@@ -168,15 +177,6 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 		return err
 	}
 
-	// e := jmail.NewEmail()
-	//
-	// e.From = message.From
-	// e.To = message.To
-	// e.Cc = message.Cc
-	// e.Bcc = message.Bcc
-	// e.Subject = message.Subject
-	// e.Text = []byte(message.Text)
-
 	// Add attachments
 	for _, path := range message.AttachmentPaths {
 		if _, err := message.PrepAttachment(path); err != nil {
@@ -184,10 +184,15 @@ func (p *GmailProvider) SendEmail(message *OutgoingMessage) error {
 		}
 	}
 
-	// Create SMTP auth
-	auth := smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
+	// Ensure SMTP auth is initialized
+	if p.smtpAuth == nil {
+		p.smtpAuth = smtp.PlainAuth("", p.userInfo.Email, p.userInfo.AppPassword, p.config.SMTPHost)
+	}
 
-	return message.SendMessage(p.config.GetSMTPAddress(), auth)
+
+	defer p.Disconnect()
+	// Use cached SMTP auth
+	return message.SendMessage(p.config.GetSMTPAddress(), p.smtpAuth)
 }
 
 // QuickSend provides a simple way to send a text email
@@ -201,6 +206,7 @@ func (p *GmailProvider) QuickSend(to, subject, body string) error {
 	message.Subject = subject
 	message.SetTextBody(body)
 
+	p.Disconnect()
 	return p.SendEmail(message)
 }
 

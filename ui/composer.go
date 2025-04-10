@@ -306,6 +306,7 @@ func (c *EmailComposer) sendEmail() {
 
 	// Update status and set sending flag
 	c.sending = true
+	c.updateStatus("Sending email...")
 
 	// Get field values
 	toField := c.form.GetFormItem(ToField).(*tview.InputField)
@@ -419,22 +420,48 @@ func (c *EmailComposer) sendEmail() {
 
 // showError displays an error message and resets the sending state
 func (c *EmailComposer) showError(message string) {
-	// Create error view
-	errorView := tview.NewTextView()
-	errorView.SetTextAlign(tview.AlignCenter)
-	errorView.SetTextColor(tcell.ColorWhite)
-	errorView.SetBackgroundColor(tcell.ColorDarkRed)
-	errorView.SetText(message + "\n\nPress any key to continue")
-
-	// Show error
-	c.app.SetRoot(errorView, true)
-
-	// Handle key press to dismiss
-	errorView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	// Create modal dialog
+	modal := tview.NewModal()
+	modal.SetText(message)
+	modal.SetBackgroundColor(tcell.ColorDarkRed)
+	modal.SetTextColor(tcell.ColorWhite)
+	modal.AddButtons([]string{"OK"})
+	
+	// Reset sending state immediately to allow input
+	c.sending = false
+	
+	// Add button handler to return to the form
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		c.app.SetRoot(c.pages, true)
 		c.app.SetFocus(c.form)
-		c.sending = false
 		c.updateStatus("Form Mode")
-		return nil
 	})
+
+	// Add direct keyboard handler for Escape and Enter keys
+	modalFlex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(nil, 0, 1, false).
+		AddItem(modal, 10, 1, true).
+		AddItem(nil, 0, 1, false)
+		
+	modalFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		// Handle Escape or Enter to dismiss dialog
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyEnter {
+			c.app.SetRoot(c.pages, true)
+			c.app.SetFocus(c.form)
+			c.updateStatus("Form Mode")
+			return nil
+		}
+		return event
+	})
+
+	// Use a flex container to center the modal
+	flex := tview.NewFlex()
+	flex.AddItem(nil, 0, 1, false)
+	flex.AddItem(modalFlex, 60, 1, true)
+	flex.AddItem(nil, 0, 1, false)
+
+	// Show error
+	c.app.SetRoot(flex, true)
+	c.app.SetFocus(modal)
 }
