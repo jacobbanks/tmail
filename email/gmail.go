@@ -199,6 +199,10 @@ func (p *GmailProvider) GetUserInfo() (auth.Credentials, error) {
 
 // NewGmailProvider creates a new Gmail provider and connects immediately
 func NewGmailProvider(config Config, userInfo auth.Credentials) (*GmailProvider, error) {
+	if userInfo.Email == "" || userInfo.AppPassword == "" || userInfo.Name == "" {
+		return nil, fmt.Errorf("cannot create gmail provider without values")
+
+	}
 	provider := &GmailProvider{
 		config:    config,
 		userInfo:  userInfo,
