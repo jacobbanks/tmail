@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -45,6 +44,7 @@ func NewEmailReader(emails []*email.IncomingMessage, provider email.MailProvider
 
 // setupUI initializes all UI components
 func (r *EmailReader) setupUI() {
+	// Refactor UI to increase render speed
 	r.setupEmailList()
 	r.setupContentView()
 	r.setupStatusBar()
@@ -106,7 +106,7 @@ func (r *EmailReader) setupContentView() {
 	r.contentView.SetTitle(" Email Content ")
 	r.contentView.SetTitleAlign(tview.AlignCenter)
 
-	// Apply theme
+	// Very Basic Theme support
 	config, _ := email.LoadUserConfig()
 	var borderColor tcell.Color
 	switch config.Theme {
@@ -256,6 +256,7 @@ func (r *EmailReader) showEmail(index int) {
 	content.WriteString(fmt.Sprintf("[yellow]Subject:[white] %s\n", email.Subject))
 
 	// Add attachment information if present
+	// TODO: Implment Attachment Downloading
 	if len(email.Attachments) > 0 {
 		content.WriteString(fmt.Sprintf("[yellow]Attachments:[white] %s\n", strings.Join(email.Attachments, ", ")))
 	}
@@ -337,17 +338,6 @@ func (r *EmailReader) updateStatusBar() {
 	} else {
 		r.statusBar.SetText("[blue]j/k[white]: Scroll | [blue]Esc[white]: Back to List | [blue]r[white]: Reply | [blue]q[white]: Quit")
 	}
-}
-
-// highlightLinks applies color formatting to URLs in text
-func highlightLinks(text string) string {
-	// Regular expression to match URLs in the text, including those in parentheses
-	urlRegex := regexp.MustCompile(`\((https?://[^\s)]+)\)`)
-
-	// Replace each URL with a colored version using tview's color tags
-	coloredText := urlRegex.ReplaceAllString(text, "([cyan]$1[white])")
-
-	return coloredText
 }
 
 // populateEmailList adds emails to the list view

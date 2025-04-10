@@ -15,42 +15,21 @@ A terminal-based email client for Gmail.
   - Message view with formatted content
   - Composer with multiple recipient support
 
-## Installation
-
 ### Quick Install
+Run this in your terminal (macOS/Linux):
 
 ```bash
-# Using Go (requires Go 1.16+)
-go install github.com/jacobbanks/tmail@latest
-
-# Using the Makefile (after cloning the repo)
-make install        # Install to $GOPATH/bin
-make install-global # Install to /usr/local/bin (requires sudo)
-```
-
-### Download Binaries
-
-Pre-built binaries are available on the [Releases page](https://github.com/jacobbanks/tmail/releases).
-
-### Build from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/jacobbanks/tmail.git
-cd tmail
-
-# Build
-make build
-
-# Run tests
-make test
-```
-
-## Usage
+curl -sSf https://raw.githubusercontent.com/jacobbanks/tmail/main/install.sh | sh
 
 ### First-time Setup
-
-Before using tmail, you need to set up authentication with Gmail:
+Before using tmail, you need a Gmail App Password.
+Visit https://myaccount.google.com/security
+Enable 2-Step Verification
+Click on App Passwords
+Under Select App, choose Mail
+Under Select Device, choose Other (Custom name) and enter tmail
+Click Generate
+Copy the 16-character password shown
 
 ```bash
 tmail auth
@@ -107,7 +86,6 @@ tmail version
 - `Ctrl+A`: Add attachment
 - `Ctrl+S`: Send email
 - `Ctrl+Q/C`: Quit without sending
-
 
 
 ### License
