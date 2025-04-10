@@ -26,10 +26,8 @@ curl -sSf https://raw.githubusercontent.com/jacobbanks/tmail/main/install.sh | s
 Before using tmail, you need a Gmail App Password.
 1. Visit https://myaccount.google.com/security
 2. Enable 2-Step Verification
-3. Click on App Passwords
-4. Under Select App, choose Mail
-5. Under Select Device, choose Other (Custom name) and enter tmail
-6. Click Generate
+3. Click on App Passwords, you may have to search for it in the search input at the top of the settings page. 
+4. Create an app password with your desired name.
 7. Copy the 16-character password shown
 
 ```bash
